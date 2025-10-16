@@ -59,7 +59,7 @@ const WasteSubmissionSchema = new mongoose.Schema({
     default: 0,
   },
 
-  paybackAmount: { type: Number },
+  paybackAmount: { type: Number,default: 0},
 
   createdAt: { type: Date, default: Date.now },
 });

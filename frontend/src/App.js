@@ -1,12 +1,18 @@
-import logo from './logo.svg';
-import './App.css';
+// src/App.jsx
+import React from "react";
+import { NotificationProvider } from "./contexts/NotificationContext";
+import WasteSubmissionForm from "./pages/WasteSubmission/WasteSubmissionForm";
+import WasteSubmissionList from "./pages/WasteSubmission/WasteSubmissionList";
 
-function App() {
+export default function App() {
   return (
-    <h1 className="text-6xl font-bold underline">
-      Hello world!
-    </h1>
+    <NotificationProvider>
+      <div className="min-h-screen bg-gray-100 p-6">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <WasteSubmissionForm />
+          <WasteSubmissionList />
+        </div>
+      </div>
+    </NotificationProvider>
   );
 }
-
-export default App;
