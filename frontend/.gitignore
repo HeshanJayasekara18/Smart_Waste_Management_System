@@ -56,3 +56,7 @@ pids
 # Windows
 Thumbs.db
 ehthumbs.db
+
+# .gitignore
+node_modules
+.env
