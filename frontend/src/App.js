@@ -1,18 +1,20 @@
-// src/App.jsx
 import React from "react";
-import { NotificationProvider } from "./contexts/NotificationContext";
-import WasteSubmissionForm from "./pages/WasteSubmission/WasteSubmissionForm";
-import WasteSubmissionList from "./pages/WasteSubmission/WasteSubmissionList";
+import { Routes, Route, BrowserRouter } from "react-router-dom";
+import AppLayout from "./components/layout/AppLayout";
+import WasteSubmissionForm from "./components/WasteSubmission/WasteSubmissionForm";
+import WasteSubmissionList from "./components/WasteSubmission/WasteSubmissionList";
 
 export default function App() {
   return (
-    <NotificationProvider>
-      <div className="min-h-screen bg-gray-100 p-6">
-        <div className="max-w-6xl mx-auto space-y-6">
-          <WasteSubmissionForm />
-          <WasteSubmissionList />
-        </div>
-      </div>
-    </NotificationProvider>
+    <BrowserRouter>
+      <AppLayout>
+        <Routes>
+          <Route path="/b" element={<div>Dashboard</div>} />
+          <Route path="/" element={<WasteSubmissionForm />} />
+          <Route path="/recyclable" element={<div>Recyclable Page</div>} />
+          <Route path="/history" element={<WasteSubmissionList />} />
+        </Routes>
+      </AppLayout>
+    </BrowserRouter>
   );
 }
