@@ -1,4 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { usePaymentContext } from './PaymentContext';
+import { fetchBillingSnapshot, getPaymentClientConfig } from './PaymentApi';
 
 const navItems = [
   { label: 'Dashboard', badge: null, active: true },
@@ -54,15 +57,14 @@ function deriveDueInfo(period) {
 }
 
 function PaymentDashboard() {
+  const navigate = useNavigate();
+  const { billingSnapshot, setBillingSnapshot, setActivePayment, setRecentPayment } =
+    usePaymentContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [billingSnapshot, setBillingSnapshot] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [paymentLoading, setPaymentLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const DEV_USER_ID = process.env.REACT_APP_DEV_USER_ID || '65f9b1e7b2f44b9a9b0a1234';
-  const API_BASE = process.env.REACT_APP_API_BASE || '';
-  const ACTIVE_PERIOD = '2025-09';
+  const { apiBase, devUserId, activePeriod } = getPaymentClientConfig();
 
   useEffect(() => {
     async function loadBill() {
@@ -82,22 +84,12 @@ function PaymentDashboard() {
       setLoading(true);
       setError('');
       try {
-        const res = await fetch(`${API_BASE}/api/bills/generate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user-id': DEV_USER_ID,
-          },
-          body: JSON.stringify({ period: ACTIVE_PERIOD }),
+        const data = await fetchBillingSnapshot({
+          apiBase,
+          devUserId,
+          period: activePeriod,
         });
-
-        if (!res.ok) {
-          const message = await res.text();
-          throw new Error(message || 'Failed to load bill');
-        }
-
-        const data = await res.json();
-    // 'data' here refers to the billingSnapshot explained above.
+        // 'data' here refers to the billingSnapshot explained above.
         setBillingSnapshot(data);
       } catch (err) {
         setError(err.message);
@@ -108,7 +100,9 @@ function PaymentDashboard() {
     }
 
     loadBill();
-  }, [API_BASE, DEV_USER_ID]);
+    setActivePayment(null);
+    setRecentPayment(null);
+  }, [apiBase, devUserId, activePeriod, setActivePayment, setRecentPayment, setBillingSnapshot]);
 
   const bill = billingSnapshot?.bill;
   const user = billingSnapshot?.user;
@@ -186,104 +180,15 @@ function PaymentDashboard() {
     [bill?.breakdown?.extraFee, recyclingCredit]
   );
 
-  async function handlePayNow() {
+  function handlePayNow() {
     if (!bill) {
       alert('No bill loaded');
       return;
     }
 
-    setPaymentLoading(true);
     setError('');
-
-    try {
-      // Start payment flow
-      // Endpoint: POST /api/payments/initiate
-      // Body: { billId, method: 'card'|'offline' }
-      // Returns: { paymentId, requiresOtp }
-      const cardInfo = {
-        number: '4242424242424242',
-        expMonth: '08',
-        expYear: '28',
-        brand: 'visa',
-        holderName: user?.name || 'Trash Track Resident',
-      };
-
-      const initiateRes = await fetch(`${API_BASE}/api/payments/initiate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': DEV_USER_ID,
-        },
-        body: JSON.stringify({ billId: bill._id, method: 'card', cardInfo }),
-      });
-
-      const initiateData = await initiateRes.json();
-      if (!initiateRes.ok) {
-        throw new Error(initiateData.message || 'Failed to initiate payment');
-      }
-
-      if (initiateData.requiresOtp && initiateData.paymentId) {
-        let otpPrefill = '';
-        try {
-          // Dev-only helper: fetch OTP (server logs OTP on creation) from admin endpoint
-          // Endpoint (dev-only): GET /api/admin/payments/:paymentId/otp
-          // NOTE: This endpoint must be disabled in production (it's wrapped with devOnly middleware)
-          const otpRes = await fetch(`${API_BASE}/api/admin/payments/${initiateData.paymentId}/otp`, {
-            headers: { 'x-user-id': DEV_USER_ID },
-          });
-          if (otpRes.ok) {
-            const otpData = await otpRes.json();
-            otpPrefill = otpData.otp || '';
-          }
-        } catch (otpErr) {
-          console.warn('OTP dev fetch failed', otpErr);
-        }
-
-        const otpInput = window.prompt(
-          'Enter the OTP sent to your email (check terminal logs in dev mode):',
-          otpPrefill
-        );
-        if (!otpInput) {
-          throw new Error('OTP required to complete payment');
-        }
-
-        // Confirm OTP
-        // Endpoint: POST /api/payments/confirm
-        // Body: { paymentId, otp }
-        // Returns: success message and paymentId on success
-        const confirmRes = await fetch(`${API_BASE}/api/payments/confirm`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user-id': DEV_USER_ID,
-          },
-          body: JSON.stringify({ paymentId: initiateData.paymentId, otp: otpInput }),
-        });
-        const confirmData = await confirmRes.json();
-        if (!confirmRes.ok) {
-          throw new Error(confirmData.message || 'Payment confirmation failed');
-        }
-        alert('Payment successful');
-        setBillingSnapshot((prev) =>
-          prev
-            ? {
-                ...prev,
-                bill: {
-                  ...prev.bill,
-                  status: 'paid',
-                },
-              }
-            : prev
-        );
-      } else {
-        alert('Payment recorded');
-      }
-    } catch (err) {
-      setError(err.message);
-      alert(err.message);
-    } finally {
-      setPaymentLoading(false);
-    }
+    // Transition into the guided payment journey.
+    navigate('/payments/select');
   }
 
   return (
@@ -379,7 +284,8 @@ function PaymentDashboard() {
           />
         ) : null}
 
-        <div className="flex flex-1 flex-col lg:ml-72">
+        {/* Getting a weird left margin for this class please check */}
+        <div className="flex flex-1 flex-col lg:ml-54">
           <header className="flex flex-col gap-6 px-6 pt-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
               <button
@@ -516,9 +422,9 @@ function PaymentDashboard() {
                   type="button"
                   className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-lg font-semibold text-white shadow-lg transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-emerald-300"
                   onClick={handlePayNow}
-                  disabled={paymentLoading || !bill || bill.status === 'paid'}
+                  disabled={!bill || bill.status === 'paid'}
                 >
-                  {paymentLoading ? 'Processing...' : bill?.status === 'paid' ? 'Paid' : 'Pay Now'}
+                  {bill?.status === 'paid' ? 'Paid' : 'Pay Now'}
                 </button>
 
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">

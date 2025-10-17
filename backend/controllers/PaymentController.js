@@ -80,9 +80,27 @@ async function getDevOtp(req, res) {
   }
 }
 
+async function downloadReceipt(req, res) {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'User not resolved' });
+    }
+    const { paymentId } = req.params;
+    const { filePath, fileName } = await PaymentService.getReceiptFile({
+      paymentId,
+      userId: req.user.id,
+    });
+    return res.download(filePath, fileName);
+  } catch (error) {
+    const status = error.message === 'Access denied for receipt' ? 403 : 404;
+    return res.status(status).json({ message: error.message });
+  }
+}
+
 module.exports = {
   initiatePayment,
   confirmPayment,
   adminConfirmPayment,
   getDevOtp,
+  downloadReceipt,
 };

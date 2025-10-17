@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 const Bill = require('../models/Bill');
@@ -246,9 +248,33 @@ async function getPaymentOtpDev({ paymentId, userId }) {
   return { otp: payment.otpDebug, status: payment.status };
 }
 
+async function getReceiptFile({ paymentId, userId }) {
+  if (!mongoose.Types.ObjectId.isValid(paymentId)) {
+    throw new Error('Invalid payment id');
+  }
+
+  const payment = await Payment.findById(paymentId).lean();
+  if (!payment) {
+    throw new Error('Payment not found');
+  }
+  if (userId && payment.userId.toString() !== userId.toString()) {
+    throw new Error('Access denied for receipt');
+  }
+  if (!payment.receiptPath) {
+    throw new Error('Receipt not available yet');
+  }
+
+  const filePath = path.resolve(payment.receiptPath);
+  await fs.promises.access(filePath, fs.constants.R_OK);
+
+  const fileName = path.basename(filePath);
+  return { filePath, fileName };
+}
+
 module.exports = {
   initiatePayment,
   confirmPayment,
   adminConfirmOffline,
   getPaymentOtpDev,
+  getReceiptFile,
 };
