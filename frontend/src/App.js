@@ -4,6 +4,8 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 import AppLayout from "./components/layout/AppLayout";
 import WasteSubmissionForm from "./components/WasteSubmission/WasteSubmissionForm/WasteSubmissionForm";
 import WasteSubmissionList from "./components/WasteSubmission/WasteSubmissionList/WasteSubmissionList";
+import MunicipalDashboard from './components/MunicipalAuthority/MunicipalDashboard';
+
 
 
 const ServiceUserLayout = () => (
@@ -23,12 +25,27 @@ const ServiceUserLayout = () => (
   </div>
 );
 
+const MunicipalAuthorityLayout = () => (
+  <div className="App">
+  <NotificationProvider>
+    <AppLayout >
+      <React.Fragment>
+        <Routes>
+          <Route path="/" element={<MunicipalDashboard />} />
+        </Routes>
+      </React.Fragment>
+    </AppLayout >
+    </NotificationProvider>
+  </div>
+);
+
 export default function App() {
   return (
     <div>
       <BrowserRouter>
       <Routes>
-       <Route path="/*" element={<ServiceUserLayout />} />
+       <Route path="/k*" element={<ServiceUserLayout />} />
+       <Route path="/*" element={<MunicipalAuthorityLayout />} />
        </Routes>
        </BrowserRouter>
     </div>

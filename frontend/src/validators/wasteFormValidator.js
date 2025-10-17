@@ -22,8 +22,10 @@ export class WasteFormValidator {
       errors.quantity = "Quantity must be greater than 0";
     }
 
-      if (!form.pickupDate) {
-      errors.pickupDate = 'Pickup date is required';
+    if (!form.pickupDate) {
+      errors.pickupDate = "Pickup date is required";
+    } else if (new Date(form.pickupDate) < new Date()) {
+      errors.pickupDate = "Pickup date must be in the future";
     }
 
     // Address validation
@@ -74,6 +76,6 @@ export class WasteFormValidator {
 
   static isValidPostalCode(postalCode) {
     // Supports various formats: 12345, 12345-6789, or other international formats
-    return /^[A-Za-z0-9\s\-]{3,10}$/.test(postalCode);
+    return /^[A-Za-z0-9\s-]{3,10}$/.test(postalCode);
   }
 }

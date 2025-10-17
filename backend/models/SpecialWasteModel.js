@@ -56,7 +56,7 @@ const WasteSubmissionSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ["pending", "approved", "rejected", "rescheduled"],
+    enum: ["pending", "approved", "rejected", "rescheduled", "in-progress","completed"],
     default: "pending",
   },
 
@@ -77,7 +77,12 @@ const WasteSubmissionSchema = new mongoose.Schema({
     default: 0,
   },
 
-  paybackAmount: { type: Number,default: 0},
+  paybackAmount: { type: Number, default: 0 },
+
+  rejectionReason: {
+    type: String,
+    default: ''
+  },
 
   createdAt: { type: Date, default: Date.now },
 });
