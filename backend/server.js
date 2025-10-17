@@ -1,4 +1,11 @@
 import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import connectDB from './config/db.js';
+import scheduleRoutes from './routes/ScheduleRoutes.js';
+import collectionRouteRoutes from './routes/CollectionRouteRoutes.js';
+import errorHandler from './middlewares/ErrorMiddleware.js';
+import notificationRoutes from './routes/NotificationRoutes.js';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './config/db.js';
@@ -10,11 +17,8 @@ import adminRoutes from './routes/AdminRoutes.js';
 import wasteSubmissionRoutes from './routes/WasteSubmissionRoutes.js';
 import initNotifications from './init/notifications.js';
 
-// ✅ Load environment variables
 dotenv.config();
-
-// ✅ Connect to MongoDB
-connectDB();
+await connectDB();
 
 const app = express();
 
@@ -26,6 +30,18 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_ORIGIN || 'http://localhost:3000',
+    credentials: true,
+  })
+);
+
+// Clean routing structure
+app.use('/api/schedules', scheduleRoutes);
+app.use('/api/collection-routes', collectionRouteRoutes);
+app.use('/api/alerts', notificationRoutes);
+app.use(errorHandler);
 
 app.use(authJwt);
 app.use(mockUser);
