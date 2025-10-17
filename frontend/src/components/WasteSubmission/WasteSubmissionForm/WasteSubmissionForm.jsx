@@ -89,7 +89,7 @@ const UNIT_OPTIONS = Object.entries(UNITS).map(([key, value]) => ({
 
   return (
     <div>
-    <div className="min-h-screen bg-gray-300 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-200 shadow-2xl py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
@@ -118,7 +118,7 @@ const UNIT_OPTIONS = Object.entries(UNITS).map(([key, value]) => ({
                   required
                   value={form.submitterName}
                   onChange={e => updateField("submitterName", e.target.value)}
-                  placeholder="John Doe"
+                  placeholder="Gihan Bandara"
                   error={errors.submitterName}
                   icon={<FiUser className="h-5 w-5 text-gray-400" />}
                 />
@@ -128,7 +128,7 @@ const UNIT_OPTIONS = Object.entries(UNITS).map(([key, value]) => ({
                   required
                   value={form.submitterEmail}
                   onChange={e => updateField("submitterEmail", e.target.value)}
-                  placeholder="john@example.com"
+                  placeholder="gihan@example.com"
                   error={errors.submitterEmail}
                   icon={<FiMail className="h-5 w-5 text-gray-400" />}
                 />
@@ -188,6 +188,7 @@ const UNIT_OPTIONS = Object.entries(UNITS).map(([key, value]) => ({
                   onChange={e => updateField("pickupDate", e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
                   icon={<FiCalendar className="h-5 w-5 text-gray-400" />}
+                   error={errors.pickupDate}
                 />
               </div>
             </div>
