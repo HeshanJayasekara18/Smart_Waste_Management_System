@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const timeWindowSchema = new mongoose.Schema(
   {
@@ -63,4 +63,4 @@ const collectionRouteSchema = new mongoose.Schema(
 
 collectionRouteSchema.index({ routeCode: 1 });
 
-module.exports = mongoose.model('CollectionRoute', collectionRouteSchema);
+export default mongoose.model('CollectionRoute', collectionRouteSchema);

@@ -1,7 +1,7 @@
-const scheduleService = require('../services/ScheduleService');
+import scheduleService from '../services/ScheduleService.js';
 
 //  SOLID (Controller SRP + DIP): delegates business logic to service, avoiding God Controller smell.
-exports.createSchedule = async (req, res, next) => {
+export const createSchedule = async (req, res, next) => {
   try {
     const schedule = await scheduleService.createSchedule(req.body);
     res.status(201).json(schedule);
@@ -10,7 +10,7 @@ exports.createSchedule = async (req, res, next) => {
   }
 };
 
-exports.listSchedules = async (req, res, next) => {
+export const listSchedules = async (req, res, next) => {
   try {
     //  Refactoring (Introduce Parameter Object): filters object prevents Long Parameter List smell.
     const filters = ['status', 'zone', 'routeId'].reduce((acc, key) => {
@@ -24,7 +24,7 @@ exports.listSchedules = async (req, res, next) => {
   }
 };
 
-exports.getSchedule = async (req, res, next) => {
+export const getSchedule = async (req, res, next) => {
   try {
     const schedule = await scheduleService.getSchedule(req.params.id);
     res.json(schedule);
@@ -33,7 +33,7 @@ exports.getSchedule = async (req, res, next) => {
   }
 };
 
-exports.updateSchedule = async (req, res, next) => {
+export const updateSchedule = async (req, res, next) => {
   try {
     const schedule = await scheduleService.updateSchedule(req.params.id, req.body);
     res.json(schedule);
@@ -42,7 +42,7 @@ exports.updateSchedule = async (req, res, next) => {
   }
 };
 
-exports.deleteSchedule = async (req, res, next) => {
+export const deleteSchedule = async (req, res, next) => {
   try {
     await scheduleService.deleteSchedule(req.params.id);
     res.status(204).send();
@@ -51,7 +51,7 @@ exports.deleteSchedule = async (req, res, next) => {
   }
 };
 
-exports.changeScheduleStatus = async (req, res, next) => {
+export const changeScheduleStatus = async (req, res, next) => {
   try {
     //  SOLID (Command-Query Separation): controller triggers state change while service controls validation.
     const schedule = await scheduleService.changeStatus(req.params.id, req.body.status);
@@ -61,7 +61,7 @@ exports.changeScheduleStatus = async (req, res, next) => {
   }
 };
 
-exports.recordScheduleAlert = async (req, res, next) => {
+export const recordScheduleAlert = async (req, res, next) => {
   try {
     //  Avoids Shotgun Surgery: alert handling centralized in service.
     const schedule = await scheduleService.recordAlert(req.params.id, req.body);
@@ -71,7 +71,7 @@ exports.recordScheduleAlert = async (req, res, next) => {
   }
 };
 
-exports.resolveScheduleAlert = async (req, res, next) => {
+export const resolveScheduleAlert = async (req, res, next) => {
   try {
     const schedule = await scheduleService.resolveAlert(req.params.id, req.params.alertId);
     res.json(schedule);

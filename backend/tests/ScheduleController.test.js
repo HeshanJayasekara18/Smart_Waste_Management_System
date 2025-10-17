@@ -1,7 +1,35 @@
-const scheduleService = require('../services/ScheduleService');
-const controller = require('../controllers/ScheduleController');
+import { jest } from '@jest/globals';
 
-jest.mock('../services/ScheduleService');
+const serviceMock = {};
+const serviceMethods = [
+  'createSchedule',
+  'listSchedules',
+  'getSchedule',
+  'updateSchedule',
+  'deleteSchedule',
+  'changeStatus',
+  'recordAlert',
+  'resolveAlert',
+];
+
+serviceMethods.forEach((name) => {
+  serviceMock[name] = jest.fn();
+});
+
+await jest.unstable_mockModule('../services/ScheduleService.js', () => ({
+  default: serviceMock,
+}));
+
+const {
+  createSchedule,
+  listSchedules,
+  getSchedule,
+  updateSchedule,
+  deleteSchedule,
+  changeScheduleStatus,
+  recordScheduleAlert,
+  resolveScheduleAlert,
+} = await import('../controllers/ScheduleController.js');
 
 describe('ScheduleController', () => {
   const buildRes = () => {
@@ -16,18 +44,21 @@ describe('ScheduleController', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    serviceMethods.forEach((name) => {
+      serviceMock[name] = jest.fn();
+    });
   });
 
   describe('createSchedule', () => {
     // Positive case: responds with 201 when service succeeds.
     it('returns 201 with created schedule', async () => {
       const req = { body: { routeId: 'R1' } };
-      scheduleService.createSchedule.mockResolvedValueOnce({ id: 'created' });
+      serviceMock.createSchedule.mockResolvedValueOnce({ id: 'created' });
       const res = buildRes();
 
-      await controller.createSchedule(req, res, next);
+      await createSchedule(req, res, next);
 
-      expect(scheduleService.createSchedule).toHaveBeenCalledWith(req.body);
+      expect(serviceMock.createSchedule).toHaveBeenCalledWith(req.body);
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({ id: 'created' });
       expect(next).not.toHaveBeenCalled();
@@ -37,10 +68,10 @@ describe('ScheduleController', () => {
     it('forwards errors', async () => {
       const req = { body: {} };
       const error = new Error('fail');
-      scheduleService.createSchedule.mockRejectedValueOnce(error);
+      serviceMock.createSchedule.mockRejectedValueOnce(error);
       const res = buildRes();
 
-      await controller.createSchedule(req, res, next);
+      await createSchedule(req, res, next);
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -52,11 +83,11 @@ describe('ScheduleController', () => {
       const req = { query: { status: 'PLANNED', extra: 'ignored' } };
       const res = buildRes();
       const schedules = [{ id: 's1' }];
-      scheduleService.listSchedules.mockResolvedValueOnce(schedules);
+      serviceMock.listSchedules.mockResolvedValueOnce(schedules);
 
-      await controller.listSchedules(req, res, next);
+      await listSchedules(req, res, next);
 
-      expect(scheduleService.listSchedules).toHaveBeenCalledWith({ status: 'PLANNED' });
+      expect(serviceMock.listSchedules).toHaveBeenCalledWith({ status: 'PLANNED' });
       expect(res.json).toHaveBeenCalledWith(schedules);
       expect(next).not.toHaveBeenCalled();
     });
@@ -66,9 +97,9 @@ describe('ScheduleController', () => {
       const req = { query: {} };
       const res = buildRes();
       const error = new Error('cannot list');
-      scheduleService.listSchedules.mockRejectedValueOnce(error);
+      serviceMock.listSchedules.mockRejectedValueOnce(error);
 
-      await controller.listSchedules(req, res, next);
+      await listSchedules(req, res, next);
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -79,11 +110,11 @@ describe('ScheduleController', () => {
     it('returns schedule by id', async () => {
       const req = { params: { id: '123' } };
       const res = buildRes();
-      scheduleService.getSchedule.mockResolvedValueOnce({ id: '123' });
+      serviceMock.getSchedule.mockResolvedValueOnce({ id: '123' });
 
-      await controller.getSchedule(req, res, next);
+      await getSchedule(req, res, next);
 
-      expect(scheduleService.getSchedule).toHaveBeenCalledWith('123');
+      expect(serviceMock.getSchedule).toHaveBeenCalledWith('123');
       expect(res.json).toHaveBeenCalledWith({ id: '123' });
     });
 
@@ -92,9 +123,9 @@ describe('ScheduleController', () => {
       const req = { params: { id: 'missing' } };
       const res = buildRes();
       const error = new Error('not found');
-      scheduleService.getSchedule.mockRejectedValueOnce(error);
+      serviceMock.getSchedule.mockRejectedValueOnce(error);
 
-      await controller.getSchedule(req, res, next);
+      await getSchedule(req, res, next);
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -105,11 +136,11 @@ describe('ScheduleController', () => {
     it('returns updated schedule', async () => {
       const req = { params: { id: '123' }, body: { notes: 'updated' } };
       const res = buildRes();
-      scheduleService.updateSchedule.mockResolvedValueOnce({ id: '123', notes: 'updated' });
+      serviceMock.updateSchedule.mockResolvedValueOnce({ id: '123', notes: 'updated' });
 
-      await controller.updateSchedule(req, res, next);
+      await updateSchedule(req, res, next);
 
-      expect(scheduleService.updateSchedule).toHaveBeenCalledWith('123', req.body);
+      expect(serviceMock.updateSchedule).toHaveBeenCalledWith('123', req.body);
       expect(res.json).toHaveBeenCalledWith({ id: '123', notes: 'updated' });
     });
 
@@ -118,9 +149,9 @@ describe('ScheduleController', () => {
       const req = { params: { id: '123' }, body: {} };
       const res = buildRes();
       const error = new Error('update error');
-      scheduleService.updateSchedule.mockRejectedValueOnce(error);
+      serviceMock.updateSchedule.mockRejectedValueOnce(error);
 
-      await controller.updateSchedule(req, res, next);
+      await updateSchedule(req, res, next);
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -131,11 +162,11 @@ describe('ScheduleController', () => {
     it('responds with 204 on success', async () => {
       const req = { params: { id: '123' } };
       const res = buildRes();
-      scheduleService.deleteSchedule.mockResolvedValueOnce();
+      serviceMock.deleteSchedule.mockResolvedValueOnce();
 
-      await controller.deleteSchedule(req, res, next);
+      await deleteSchedule(req, res, next);
 
-      expect(scheduleService.deleteSchedule).toHaveBeenCalledWith('123');
+      expect(serviceMock.deleteSchedule).toHaveBeenCalledWith('123');
       expect(res.status).toHaveBeenCalledWith(204);
       expect(res.send).toHaveBeenCalledWith();
     });
@@ -145,9 +176,9 @@ describe('ScheduleController', () => {
       const req = { params: { id: '123' } };
       const res = buildRes();
       const error = new Error('delete fail');
-      scheduleService.deleteSchedule.mockRejectedValueOnce(error);
+      serviceMock.deleteSchedule.mockRejectedValueOnce(error);
 
-      await controller.deleteSchedule(req, res, next);
+      await deleteSchedule(req, res, next);
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -158,11 +189,11 @@ describe('ScheduleController', () => {
     it('returns updated schedule with new status', async () => {
       const req = { params: { id: '123' }, body: { status: 'IN_PROGRESS' } };
       const res = buildRes();
-      scheduleService.changeStatus.mockResolvedValueOnce({ id: '123', status: 'IN_PROGRESS' });
+      serviceMock.changeStatus.mockResolvedValueOnce({ id: '123', status: 'IN_PROGRESS' });
 
-      await controller.changeScheduleStatus(req, res, next);
+      await changeScheduleStatus(req, res, next);
 
-      expect(scheduleService.changeStatus).toHaveBeenCalledWith('123', 'IN_PROGRESS');
+      expect(serviceMock.changeStatus).toHaveBeenCalledWith('123', 'IN_PROGRESS');
       expect(res.json).toHaveBeenCalledWith({ id: '123', status: 'IN_PROGRESS' });
     });
 
@@ -171,9 +202,9 @@ describe('ScheduleController', () => {
       const req = { params: { id: '123' }, body: { status: 'IN_PROGRESS' } };
       const res = buildRes();
       const error = new Error('status fail');
-      scheduleService.changeStatus.mockRejectedValueOnce(error);
+      serviceMock.changeStatus.mockRejectedValueOnce(error);
 
-      await controller.changeScheduleStatus(req, res, next);
+      await changeScheduleStatus(req, res, next);
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -184,11 +215,11 @@ describe('ScheduleController', () => {
     it('returns 201 with updated schedule', async () => {
       const req = { params: { id: '123' }, body: { message: 'alert' } };
       const res = buildRes();
-      scheduleService.recordAlert.mockResolvedValueOnce({ id: '123', alerts: [] });
+      serviceMock.recordAlert.mockResolvedValueOnce({ id: '123', alerts: [] });
 
-      await controller.recordScheduleAlert(req, res, next);
+      await recordScheduleAlert(req, res, next);
 
-      expect(scheduleService.recordAlert).toHaveBeenCalledWith('123', req.body);
+      expect(serviceMock.recordAlert).toHaveBeenCalledWith('123', req.body);
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({ id: '123', alerts: [] });
     });
@@ -198,9 +229,9 @@ describe('ScheduleController', () => {
       const req = { params: { id: '123' }, body: { message: 'alert' } };
       const res = buildRes();
       const error = new Error('record fail');
-      scheduleService.recordAlert.mockRejectedValueOnce(error);
+      serviceMock.recordAlert.mockRejectedValueOnce(error);
 
-      await controller.recordScheduleAlert(req, res, next);
+      await recordScheduleAlert(req, res, next);
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -211,11 +242,11 @@ describe('ScheduleController', () => {
     it('returns schedule with resolved alert', async () => {
       const req = { params: { id: '123', alertId: 'a1' } };
       const res = buildRes();
-      scheduleService.resolveAlert.mockResolvedValueOnce({ id: '123', alerts: [] });
+      serviceMock.resolveAlert.mockResolvedValueOnce({ id: '123', alerts: [] });
 
-      await controller.resolveScheduleAlert(req, res, next);
+      await resolveScheduleAlert(req, res, next);
 
-      expect(scheduleService.resolveAlert).toHaveBeenCalledWith('123', 'a1');
+      expect(serviceMock.resolveAlert).toHaveBeenCalledWith('123', 'a1');
       expect(res.json).toHaveBeenCalledWith({ id: '123', alerts: [] });
     });
 
@@ -224,9 +255,9 @@ describe('ScheduleController', () => {
       const req = { params: { id: '123', alertId: 'a1' } };
       const res = buildRes();
       const error = new Error('resolve fail');
-      scheduleService.resolveAlert.mockRejectedValueOnce(error);
+      serviceMock.resolveAlert.mockRejectedValueOnce(error);
 
-      await controller.resolveScheduleAlert(req, res, next);
+      await resolveScheduleAlert(req, res, next);
 
       expect(next).toHaveBeenCalledWith(error);
     });

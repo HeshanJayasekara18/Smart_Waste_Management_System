@@ -1,4 +1,4 @@
-const CollectionRoute = require('../models/CollectionRoute');
+import CollectionRoute from '../models/CollectionRoute.js';
 
 //  SOLID (SRP + DIP): encapsulates route business rules so controllers depend on this abstraction.
 class CollectionRouteService {
@@ -42,9 +42,7 @@ class CollectionRouteService {
   }
 }
 
-const collectionRouteService = new CollectionRouteService();
-
-module.exports = { collectionRouteService };
+export default new CollectionRouteService();
 
 //  Refactoring (Extract Function): centralizes creation validation to avoid Duplicated Code smell.
 function sanitizeCreatePayload(payload = {}) {

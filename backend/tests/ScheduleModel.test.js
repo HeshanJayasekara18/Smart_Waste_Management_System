@@ -1,4 +1,4 @@
-const Schedule = require('../models/Schedule');
+import Schedule from '../models/Schedule.js';
 
 describe('Schedule model validation', () => {
   // Negative case: rejects schedules with empty bin identifiers.

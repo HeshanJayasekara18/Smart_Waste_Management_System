@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const scheduleAlertSchema = new mongoose.Schema({
   type: {
@@ -60,4 +60,4 @@ scheduleSchema.pre('validate', function enforceTimeWindow(next) {
 });
 
 //  Model encapsulates persistence mapping only. Business rules live in services.
-module.exports = mongoose.model('Schedule', scheduleSchema);
+export default mongoose.model('Schedule', scheduleSchema);

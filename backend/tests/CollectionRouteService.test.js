@@ -1,20 +1,27 @@
-jest.mock('../models/CollectionRoute', () => {
-  const CollectionRouteMock = jest.fn(function (payload) {
-    this.payload = payload;
-    this.save = jest.fn().mockResolvedValue({ id: 'route-123', ...this.payload });
-    return this;
-  });
+import { jest } from '@jest/globals';
 
-  CollectionRouteMock.find = jest.fn().mockResolvedValue([]);
-  CollectionRouteMock.findById = jest.fn().mockResolvedValue(null);
-  CollectionRouteMock.findByIdAndDelete = jest.fn();
-  CollectionRouteMock.findOne = jest.fn();
+const mockRouteFind = jest.fn().mockResolvedValue([]);
+const mockRouteFindById = jest.fn().mockResolvedValue(null);
+const mockRouteFindByIdAndDelete = jest.fn();
+const mockRouteFindOne = jest.fn();
 
-  return CollectionRouteMock;
+const CollectionRouteMock = jest.fn(function (payload) {
+  this.payload = payload;
+  this.save = jest.fn().mockResolvedValue({ id: 'route-123', ...this.payload });
+  return this;
 });
 
-const CollectionRoute = require('../models/CollectionRoute');
-const { collectionRouteService } = require('../services/CollectionRouteService');
+CollectionRouteMock.find = mockRouteFind;
+CollectionRouteMock.findById = mockRouteFindById;
+CollectionRouteMock.findByIdAndDelete = mockRouteFindByIdAndDelete;
+CollectionRouteMock.findOne = mockRouteFindOne;
+
+await jest.unstable_mockModule('../models/CollectionRoute.js', () => ({
+  default: CollectionRouteMock,
+}));
+
+const { default: CollectionRoute } = await import('../models/CollectionRoute.js');
+const { default: collectionRouteService } = await import('../services/CollectionRouteService.js');
 
 const baseStart = '2025-01-01T09:00:00.000Z';
 const baseEnd = '2025-01-01T10:00:00.000Z';

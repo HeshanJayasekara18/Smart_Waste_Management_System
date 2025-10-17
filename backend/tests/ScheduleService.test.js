@@ -1,20 +1,26 @@
-jest.mock('../models/Schedule', () => {
-  const ScheduleMock = function (payload) {
-    this.payload = payload;
-    this.alerts = [];
-    this.save = jest.fn().mockResolvedValue({ id: '123', ...this.payload, alerts: this.alerts });
-    return this;
-  };
+import { jest } from '@jest/globals';
 
-  ScheduleMock.find = jest.fn().mockResolvedValue([]);
-  ScheduleMock.findById = jest.fn().mockResolvedValue(null);
-  ScheduleMock.findByIdAndDelete = jest.fn();
+const mockScheduleFind = jest.fn().mockResolvedValue([]);
+const mockScheduleFindById = jest.fn().mockResolvedValue(null);
+const mockScheduleFindByIdAndDelete = jest.fn();
 
-  return ScheduleMock;
-});
+const ScheduleMock = function (payload) {
+  this.payload = payload;
+  this.alerts = [];
+  this.save = jest.fn().mockResolvedValue({ id: '123', ...this.payload, alerts: this.alerts });
+  return this;
+};
 
-const Schedule = require('../models/Schedule');
-const scheduleService = require('../services/ScheduleService');
+ScheduleMock.find = mockScheduleFind;
+ScheduleMock.findById = mockScheduleFindById;
+ScheduleMock.findByIdAndDelete = mockScheduleFindByIdAndDelete;
+
+await jest.unstable_mockModule('../models/Schedule.js', () => ({
+  default: ScheduleMock,
+}));
+
+const { default: Schedule } = await import('../models/Schedule.js');
+const { default: scheduleService } = await import('../services/ScheduleService.js');
 
 const baseStart = new Date('2025-01-01T09:00:00.000Z');
 const baseEnd = new Date('2025-01-01T10:00:00.000Z');
@@ -46,7 +52,7 @@ function buildScheduleDoc(overrides = {}) {
 describe('ScheduleService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Schedule.find.mockImplementation(() => Promise.resolve([]));
+    Schedule.find.mockResolvedValue([]);
     Schedule.findById.mockResolvedValue(null);
     Schedule.findByIdAndDelete.mockResolvedValue(null);
   });

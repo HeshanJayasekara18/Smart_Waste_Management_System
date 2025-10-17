@@ -1,5 +1,5 @@
-const express = require('express');
-const {
+import { Router } from 'express';
+import {
   createSchedule,
   listSchedules,
   getSchedule,
@@ -8,9 +8,9 @@ const {
   changeScheduleStatus,
   recordScheduleAlert,
   resolveScheduleAlert,
-} = require('../controllers/ScheduleController');
+} from '../controllers/ScheduleController.js';
 
-const router = express.Router();
+const router = Router();
 
 router.post('/', createSchedule);
 router.get('/', listSchedules);
@@ -21,4 +21,4 @@ router.patch('/:id/status', changeScheduleStatus);
 router.post('/:id/alerts', recordScheduleAlert);
 router.patch('/:id/alerts/:alertId/resolve', resolveScheduleAlert);
 
-module.exports = router;
+export default router;

@@ -1,5 +1,5 @@
 //  Centralized Error Handling (avoids code duplication)
-module.exports = (err, req, res, next) => {
+const errorHandler = (err, req, res, next) => {
   console.error('Error:', err.message);
   const status = err.statusCode || (err.message?.includes('overlap') ? 409 : 400);
   const payload = {
@@ -16,4 +16,6 @@ module.exports = (err, req, res, next) => {
 
   res.status(status).json(payload);
 };
+
+export default errorHandler;
 

@@ -1,4 +1,4 @@
-const Schedule = require('../models/Schedule');
+import Schedule from '../models/Schedule.js';
 
 //  SOLID (SRP): Service owns scheduling rules only — prevents controller/model "God classes".
 
@@ -143,7 +143,7 @@ class ScheduleService {
   }
 }
 
-module.exports = new ScheduleService();
+export default new ScheduleService();
 
 function sanitizeCreationPayload(payload = {}) {
   const requiredFields = ['routeId', 'zone', 'scheduledStart', 'scheduledEnd', 'createdBy'];
