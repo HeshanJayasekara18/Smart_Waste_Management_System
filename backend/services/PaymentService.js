@@ -1,12 +1,12 @@
-const fs = require('fs');
-const path = require('path');
-const mongoose = require('mongoose');
-const crypto = require('crypto');
-const Bill = require('../models/Bill');
-const Payment = require('../models/Payment');
-const User = require('../models/User');
-const ReceiptService = require('./ReceiptService');
-const Mailer = require('../utils/mailer');
+import fs from 'fs';
+import path from 'path';
+import mongoose from 'mongoose';
+import crypto from 'crypto';
+import Bill from '../models/Bill.js';
+import Payment from '../models/Payment.js';
+import User from '../models/User.js';
+import * as ReceiptService from './ReceiptService.js';
+import { sendMail } from '../utils/mailer.js';
 
 const OTP_EXPIRY_MINUTES = 5;
 
@@ -34,7 +34,7 @@ async function sendOtpEmail({ user, payment, otp }) {
   const subject = 'Your Smart Waste payment OTP';
   const text = `Hi ${user.name},\n\nUse the following one-time password to confirm your payment: ${otp}.\n\nPayment reference: ${payment.gatewayRef}\nThis code expires in ${OTP_EXPIRY_MINUTES} minutes.\n\nIf you did not initiate this payment, please contact support immediately.`;
   try {
-    await Mailer.sendMail({
+  await sendMail({
       to: user.email,
       subject,
       text,
@@ -56,7 +56,7 @@ async function deliverReceipt({ payment, bill, user }) {
   await payment.save();
 
   try {
-    await Mailer.sendMail({
+  await sendMail({
       to: user.email,
       subject: 'Smart Waste payment receipt',
       text: `Hi ${user.name},\n\nYour payment for the ${bill.period} bill has been marked as paid. We've attached the receipt for your records.`,
@@ -76,7 +76,7 @@ async function deliverReceipt({ payment, bill, user }) {
   }
 }
 
-async function initiatePayment({
+export async function initiatePayment({
   userId,
   billId,
   method,
@@ -167,7 +167,7 @@ async function initiatePayment({
   await payment.save();
 
   try {
-    await Mailer.sendMail({
+  await sendMail({
       to: user.email,
       subject: 'Offline payment recorded',
       text: `Hi ${user.name},\n\nWe recorded your offline payment reference ${offlineReference}. Please visit your municipal office with the attached slip to complete the payment. Your bill will remain pending until a municipal officer confirms the receipt.`,
@@ -193,7 +193,7 @@ async function initiatePayment({
   };
 }
 
-async function confirmPayment({ userId, paymentId, otp }) {
+export async function confirmPayment({ userId, paymentId, otp }) {
   if (!mongoose.Types.ObjectId.isValid(paymentId)) {
     throw new Error('Invalid payment id');
   }
@@ -249,7 +249,7 @@ async function confirmPayment({ userId, paymentId, otp }) {
   return { payment };
 }
 
-async function adminConfirmOffline({ paymentId }) {
+export async function adminConfirmOffline({ paymentId }) {
   if (!mongoose.Types.ObjectId.isValid(paymentId)) {
     throw new Error('Invalid payment id');
   }
@@ -289,7 +289,7 @@ async function adminConfirmOffline({ paymentId }) {
   return { payment };
 }
 
-async function getPaymentOtpDev({ paymentId, userId }) {
+export async function getPaymentOtpDev({ paymentId, userId }) {
   if (!mongoose.Types.ObjectId.isValid(paymentId)) {
     throw new Error('Invalid payment id');
   }
@@ -304,7 +304,7 @@ async function getPaymentOtpDev({ paymentId, userId }) {
   return { otp: payment.otpDebug, status: payment.status };
 }
 
-async function getReceiptFile({ paymentId, userId }) {
+export async function getReceiptFile({ paymentId, userId }) {
   if (!mongoose.Types.ObjectId.isValid(paymentId)) {
     throw new Error('Invalid payment id');
   }
@@ -327,7 +327,7 @@ async function getReceiptFile({ paymentId, userId }) {
   return { filePath, fileName };
 }
 
-async function getOfflineSlipFile({ paymentId, userId }) {
+export async function getOfflineSlipFile({ paymentId, userId }) {
   if (!mongoose.Types.ObjectId.isValid(paymentId)) {
     throw new Error('Invalid payment id');
   }
@@ -350,7 +350,7 @@ async function getOfflineSlipFile({ paymentId, userId }) {
   return { filePath, fileName };
 }
 
-async function getPaymentHistory({ userId, limit = 20 }) {
+export async function getPaymentHistory({ userId, limit = 20 }) {
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     throw new Error('Invalid user id');
   }
@@ -392,12 +392,3 @@ async function getPaymentHistory({ userId, limit = 20 }) {
   });
 }
 
-module.exports = {
-  initiatePayment,
-  confirmPayment,
-  adminConfirmOffline,
-  getPaymentOtpDev,
-  getReceiptFile,
-  getOfflineSlipFile,
-  getPaymentHistory,
-};

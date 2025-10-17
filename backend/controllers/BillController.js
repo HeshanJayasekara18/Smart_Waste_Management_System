@@ -1,4 +1,4 @@
-const BillingService = require('../services/BillingService');
+import { generateBillForPeriod, getBillById } from '../services/BillingService.js';
 
 async function generateBill(req, res) {
   try {
@@ -6,7 +6,7 @@ async function generateBill(req, res) {
       return res.status(401).json({ message: 'User not resolved' });
     }
     const { period } = req.body || {};
-    const data = await BillingService.generateBillForPeriod({
+  const data = await generateBillForPeriod({
       userId: req.user.id,
       period,
     });
@@ -22,7 +22,7 @@ async function getBill(req, res) {
       return res.status(401).json({ message: 'User not resolved' });
     }
     const { id } = req.params;
-    const data = await BillingService.getBillById({
+  const data = await getBillById({
       billId: id,
       userId: req.user.id,
     });
@@ -32,7 +32,4 @@ async function getBill(req, res) {
   }
 }
 
-module.exports = {
-  generateBill,
-  getBill,
-};
+export { generateBill, getBill };

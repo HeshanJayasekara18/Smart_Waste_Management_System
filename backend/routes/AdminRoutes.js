@@ -1,12 +1,12 @@
-const express = require('express');
-const PaymentController = require('../controllers/PaymentController');
-const devOnly = require('../middlewares/devOnly');
+import { Router } from 'express';
+import { getDevOtp, adminConfirmPayment } from '../controllers/PaymentController.js';
+import devOnly from '../middlewares/devOnly.js';
 
-const router = express.Router();
+const router = Router();
 
 router.use(devOnly);
 
-router.get('/payments/:paymentId/otp', PaymentController.getDevOtp);
-router.post('/payments/confirm', PaymentController.adminConfirmPayment);
+router.get('/payments/:paymentId/otp', getDevOtp);
+router.post('/payments/confirm', adminConfirmPayment);
 
-module.exports = router;
+export default router;

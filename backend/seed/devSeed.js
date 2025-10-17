@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const connectDB = require('../config/db');
-const Municipality = require('../models/Municipality');
-const User = require('../models/User');
-const CollectionData = require('../models/CollectionData');
-const WasteSubmission = require('../models/WasteSubmission');
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import connectDB from '../config/db.js';
+import Municipality from '../models/Municipality.js';
+import User from '../models/User.js';
+import CollectionData from '../models/CollectionData.js';
+import WasteSubmission from '../models/WasteSubmission.js';
 
 dotenv.config();
 

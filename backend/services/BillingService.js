@@ -1,9 +1,9 @@
-const mongoose = require('mongoose');
-const Bill = require('../models/Bill');
-const User = require('../models/User');
-const Municipality = require('../models/Municipality');
-const CollectionData = require('../models/CollectionData');
-const WasteSubmission = require('../models/WasteSubmission');
+import mongoose from 'mongoose';
+import Bill from '../models/Bill.js';
+import User from '../models/User.js';
+import Municipality from '../models/Municipality.js';
+import CollectionData from '../models/CollectionData.js';
+import WasteSubmission from '../models/WasteSubmission.js';
 
 function resolvePeriod(period) {
   if (period) {
@@ -39,7 +39,7 @@ function computeBaseAmount({ municipality, collection, defaultRate }) {
   }
 }
 
-async function generateBillForPeriod({ userId, period }) {
+export async function generateBillForPeriod({ userId, period }) {
   const resolvedPeriod = resolvePeriod(period);
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     throw new Error('Invalid user id');
@@ -114,7 +114,7 @@ async function generateBillForPeriod({ userId, period }) {
   };
 }
 
-async function getBillById({ billId, userId }) {
+export async function getBillById({ billId, userId }) {
   if (!mongoose.Types.ObjectId.isValid(billId)) {
     throw new Error('Invalid bill id');
   }
@@ -140,7 +140,3 @@ async function getBillById({ billId, userId }) {
   };
 }
 
-module.exports = {
-  generateBillForPeriod,
-  getBillById,
-};

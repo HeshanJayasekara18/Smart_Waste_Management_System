@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const collectionDataSchema = new mongoose.Schema(
   {
@@ -20,4 +20,4 @@ const collectionDataSchema = new mongoose.Schema(
 
 collectionDataSchema.index({ userId: 1, period: 1 }, { unique: true });
 
-module.exports = mongoose.model('CollectionData', collectionDataSchema);
+export default mongoose.model('CollectionData', collectionDataSchema);

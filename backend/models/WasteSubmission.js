@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const wasteSubmissionSchema = new mongoose.Schema(
   {
@@ -21,4 +21,4 @@ const wasteSubmissionSchema = new mongoose.Schema(
 
 wasteSubmissionSchema.index({ userId: 1, period: 1 });
 
-module.exports = mongoose.model('WasteSubmission', wasteSubmissionSchema);
+export default mongoose.model('WasteSubmission', wasteSubmissionSchema);

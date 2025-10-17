@@ -1,9 +1,9 @@
-const express = require('express');
-const BillController = require('../controllers/BillController');
+import { Router } from 'express';
+import { generateBill, getBill } from '../controllers/BillController.js';
 
-const router = express.Router();
+const router = Router();
 
-router.post('/generate', BillController.generateBill);
-router.get('/:id', BillController.getBill);
+router.post('/generate', generateBill);
+router.get('/:id', getBill);
 
-module.exports = router;
+export default router;

@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
 let transporter;
 let isStreamTransport = false;
@@ -31,7 +31,7 @@ function buildTransport() {
   isStreamTransport = true;
 }
 
-async function sendMail({ to, subject, text, html, attachments }) {
+export async function sendMail({ to, subject, text, html, attachments }) {
   if (!transporter) {
     buildTransport();
   }
@@ -54,6 +54,3 @@ async function sendMail({ to, subject, text, html, attachments }) {
   return info;
 }
 
-module.exports = {
-  sendMail,
-};

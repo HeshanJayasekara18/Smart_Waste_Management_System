@@ -1,12 +1,12 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const cors = require('cors');
-const connectDB = require('./config/db');
-const authJwt = require('./middlewares/authJwt');
-const mockUser = require('./middlewares/mockUser');
-const billRoutes = require('./routes/BillRoutes');
-const paymentRoutes = require('./routes/PaymentRoutes');
-const adminRoutes = require('./routes/AdminRoutes');
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import connectDB from './config/db.js';
+import authJwt from './middlewares/authJwt.js';
+import mockUser from './middlewares/mockUser.js';
+import billRoutes from './routes/BillRoutes.js';
+import paymentRoutes from './routes/PaymentRoutes.js';
+import adminRoutes from './routes/AdminRoutes.js';
 
 // ✅ Load environment variables
 dotenv.config();

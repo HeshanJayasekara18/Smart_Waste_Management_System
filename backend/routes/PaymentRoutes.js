@@ -1,12 +1,18 @@
-const express = require('express');
-const PaymentController = require('../controllers/PaymentController');
+import { Router } from 'express';
+import {
+	initiatePayment,
+	confirmPayment,
+	getHistory,
+	downloadReceipt,
+	downloadOfflineSlip,
+} from '../controllers/PaymentController.js';
 
-const router = express.Router();
+const router = Router();
 
-router.post('/initiate', PaymentController.initiatePayment);
-router.post('/confirm', PaymentController.confirmPayment);
-router.get('/history', PaymentController.getHistory);
-router.get('/:paymentId/receipt', PaymentController.downloadReceipt);
-router.get('/:paymentId/offline-slip', PaymentController.downloadOfflineSlip);
+router.post('/initiate', initiatePayment);
+router.post('/confirm', confirmPayment);
+router.get('/history', getHistory);
+router.get('/:paymentId/receipt', downloadReceipt);
+router.get('/:paymentId/offline-slip', downloadOfflineSlip);
 
-module.exports = router;
+export default router;

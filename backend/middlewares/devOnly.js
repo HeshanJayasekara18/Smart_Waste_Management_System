@@ -5,4 +5,4 @@ function devOnly(req, res, next) {
   return next();
 }
 
-module.exports = devOnly;
+export default devOnly;

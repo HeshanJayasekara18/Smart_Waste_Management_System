@@ -1,6 +1,10 @@
-const fs = require('fs');
-const path = require('path');
-const PDFDocument = require('pdfkit');
+import fs from 'fs';
+import path from 'path';
+import PDFDocument from 'pdfkit';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const RECEIPT_DIR = path.resolve(__dirname, '../storage/receipts');
 
@@ -21,7 +25,7 @@ function formatCurrency(value, currency = 'LKR') {
   }
 }
 
-async function generateReceipt({ payment, bill, user }) {
+export async function generateReceipt({ payment, bill, user }) {
   await ensureReceiptDir();
   const fileName = `receipt-${payment._id}.pdf`;
   const filePath = path.join(RECEIPT_DIR, fileName);
@@ -75,7 +79,7 @@ async function generateReceipt({ payment, bill, user }) {
   return { filePath, fileName };
 }
 
-async function generateOfflineSlip({ payment, bill, user }) {
+export async function generateOfflineSlip({ payment, bill, user }) {
   await ensureReceiptDir();
   const fileName = `offline-slip-${payment._id}.pdf`;
   const filePath = path.join(RECEIPT_DIR, fileName);
@@ -130,7 +134,3 @@ async function generateOfflineSlip({ payment, bill, user }) {
   return { filePath, fileName };
 }
 
-module.exports = {
-  generateReceipt,
-  generateOfflineSlip,
-};

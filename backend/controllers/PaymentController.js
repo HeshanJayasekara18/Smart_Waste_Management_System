@@ -1,4 +1,4 @@
-const PaymentService = require('../services/PaymentService');
+import * as PaymentService from '../services/PaymentService.js';
 
 async function initiatePayment(req, res) {
   try {
@@ -135,7 +135,7 @@ async function getHistory(req, res) {
   }
 }
 
-module.exports = {
+export {
   initiatePayment,
   confirmPayment,
   adminConfirmPayment,

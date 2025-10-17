@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const breakdownSchema = new mongoose.Schema(
   {
@@ -42,4 +42,4 @@ const billSchema = new mongoose.Schema(
 
 billSchema.index({ userId: 1, period: 1 }, { unique: true });
 
-module.exports = mongoose.model('Bill', billSchema);
+export default mongoose.model('Bill', billSchema);

@@ -19,4 +19,4 @@ function mockUser(req, res, next) {
   return next();
 }
 
-module.exports = mockUser;
+export default mockUser;
