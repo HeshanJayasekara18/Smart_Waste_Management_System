@@ -30,7 +30,7 @@ const paymentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['initiated', 'otp_pending', 'authorized', 'failed'],
+      enum: ['initiated', 'otp_pending', 'authorized', 'failed', 'pending_offline'],
       default: 'initiated',
     },
     amount: { type: Number, required: true },
@@ -45,6 +45,10 @@ const paymentSchema = new mongoose.Schema(
     card: { type: cardDetailsSchema, default: () => ({}) },
     confirmedByAdmin: { type: Boolean, default: false },
     paidAt: { type: Date },
+    offlineReference: { type: String, default: '' },
+    offlineInstructions: { type: String, default: '' },
+    offlineReceiptPath: { type: String, default: '' },
+    offlineSlipGeneratedAt: { type: Date },
   },
   { timestamps: true }
 );

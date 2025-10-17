@@ -5,7 +5,7 @@ async function initiatePayment(req, res) {
     if (!req.user || !req.user.id) {
       return res.status(401).json({ message: 'User not resolved' });
     }
-    const { billId, method, cardInfo } = req.body || {};
+    const { billId, method, cardInfo, referenceCode, notes } = req.body || {};
     if (!billId || !method) {
       return res.status(400).json({ message: 'billId and method required' });
     }
@@ -14,6 +14,8 @@ async function initiatePayment(req, res) {
       billId,
       method,
       cardInfo,
+      offlineReference: referenceCode,
+      offlineInstructions: notes,
     });
     return res.json({
       paymentId: result.payment._id,
@@ -22,6 +24,8 @@ async function initiatePayment(req, res) {
       message: result.requiresOtp
         ? 'OTP sent to your registered email'
         : 'Payment recorded and awaiting admin confirmation',
+      status: result.payment.status,
+      offlineSlip: result.offline || null,
     });
   } catch (error) {
     return res.status(400).json({ message: error.message });
@@ -97,10 +101,28 @@ async function downloadReceipt(req, res) {
   }
 }
 
+async function downloadOfflineSlip(req, res) {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'User not resolved' });
+    }
+    const { paymentId } = req.params;
+    const { filePath, fileName } = await PaymentService.getOfflineSlipFile({
+      paymentId,
+      userId: req.user.id,
+    });
+    return res.download(filePath, fileName);
+  } catch (error) {
+    const status = error.message.includes('Access denied') ? 403 : 404;
+    return res.status(status).json({ message: error.message });
+  }
+}
+
 module.exports = {
   initiatePayment,
   confirmPayment,
   adminConfirmPayment,
   getDevOtp,
   downloadReceipt,
+  downloadOfflineSlip,
 };

@@ -76,7 +76,15 @@ async function deliverReceipt({ payment, bill, user }) {
   }
 }
 
-async function initiatePayment({ userId, billId, method, cardInfo = {}, bankSlipPath = '' }) {
+async function initiatePayment({
+  userId,
+  billId,
+  method,
+  cardInfo = {},
+  bankSlipPath = '',
+  offlineReference = '',
+  offlineInstructions = '',
+}) {
   if (!mongoose.Types.ObjectId.isValid(billId)) {
     throw new Error('Invalid bill id');
   }
@@ -97,7 +105,8 @@ async function initiatePayment({ userId, billId, method, cardInfo = {}, bankSlip
     method,
     amount: bill.amount,
     currency: 'LKR',
-    gatewayRef: `GW-${Date.now()}`,
+    gatewayRef:
+      method === 'offline' && offlineReference ? offlineReference.trim() : `GW-${Date.now()}`,
     bankSlipPath,
   };
 
@@ -136,14 +145,51 @@ async function initiatePayment({ userId, billId, method, cardInfo = {}, bankSlip
     };
   }
 
+  if (!offlineReference) {
+    throw new Error('Reference code required for offline payments');
+  }
+
   const payment = await Payment.create({
     ...basePayload,
-    status: 'initiated',
+    status: 'pending_offline',
+    offlineReference: offlineReference.trim(),
+    offlineInstructions: offlineInstructions.trim(),
   });
+
+  const slip = await ReceiptService.generateOfflineSlip({
+    payment,
+    bill,
+    user,
+  });
+
+  payment.offlineReceiptPath = slip.filePath;
+  payment.offlineSlipGeneratedAt = new Date();
+  await payment.save();
+
+  try {
+    await Mailer.sendMail({
+      to: user.email,
+      subject: 'Offline payment recorded',
+      text: `Hi ${user.name},\n\nWe recorded your offline payment reference ${offlineReference}. Please visit your municipal office with the attached slip to complete the payment. Your bill will remain pending until a municipal officer confirms the receipt.`,
+      attachments: [
+        {
+          filename: slip.fileName,
+          path: slip.filePath,
+        },
+      ],
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[dev] Failed to send offline acknowledgement email.', error.message);
+    }
+  }
 
   return {
     payment,
     requiresOtp: false,
+    offline: {
+      slipFileName: slip.fileName,
+    },
   };
 }
 
@@ -161,19 +207,21 @@ async function confirmPayment({ userId, paymentId, otp }) {
     return { payment };
   }
 
-  if (payment.method === 'card') {
-    if (payment.status !== 'otp_pending') {
-      throw new Error('Payment not awaiting OTP');
-    }
-    if (!otp) {
-      throw new Error('OTP required');
-    }
-    if (payment.otpExpiresAt && payment.otpExpiresAt < new Date()) {
-      throw new Error('OTP expired');
-    }
-    if (hashOtp(otp) !== payment.otpHash) {
-      throw new Error('Invalid OTP');
-    }
+  if (payment.method !== 'card') {
+    throw new Error('Offline payments require municipal confirmation');
+  }
+
+  if (payment.status !== 'otp_pending') {
+    throw new Error('Payment not awaiting OTP');
+  }
+  if (!otp) {
+    throw new Error('OTP required');
+  }
+  if (payment.otpExpiresAt && payment.otpExpiresAt < new Date()) {
+    throw new Error('OTP expired');
+  }
+  if (hashOtp(otp) !== payment.otpHash) {
+    throw new Error('Invalid OTP');
   }
 
   const bill = await Bill.findById(payment.billId);
@@ -218,6 +266,14 @@ async function adminConfirmOffline({ paymentId }) {
   const user = await User.findById(payment.userId);
   if (!user) {
     throw new Error('User not found for payment');
+  }
+
+  if (payment.method !== 'offline') {
+    throw new Error('Only offline payments can be confirmed by admin');
+  }
+
+  if (payment.status !== 'pending_offline') {
+    throw new Error('Offline payment already processed');
   }
 
   payment.status = 'authorized';
@@ -271,10 +327,34 @@ async function getReceiptFile({ paymentId, userId }) {
   return { filePath, fileName };
 }
 
+async function getOfflineSlipFile({ paymentId, userId }) {
+  if (!mongoose.Types.ObjectId.isValid(paymentId)) {
+    throw new Error('Invalid payment id');
+  }
+
+  const payment = await Payment.findById(paymentId).lean();
+  if (!payment) {
+    throw new Error('Payment not found');
+  }
+  if (userId && payment.userId.toString() !== userId.toString()) {
+    throw new Error('Access denied for offline slip');
+  }
+  if (!payment.offlineReceiptPath) {
+    throw new Error('Offline payment slip not available');
+  }
+
+  const filePath = path.resolve(payment.offlineReceiptPath);
+  await fs.promises.access(filePath, fs.constants.R_OK);
+
+  const fileName = path.basename(filePath);
+  return { filePath, fileName };
+}
+
 module.exports = {
   initiatePayment,
   confirmPayment,
   adminConfirmOffline,
   getPaymentOtpDev,
   getReceiptFile,
+  getOfflineSlipFile,
 };

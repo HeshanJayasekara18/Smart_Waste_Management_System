@@ -58,3 +58,42 @@ export async function fetchDevOtp({ apiBase, devUserId, paymentId }) {
   });
   return handleResponse(response);
 }
+
+export async function initiateOfflinePayment({
+  apiBase,
+  devUserId,
+  billId,
+  referenceCode,
+  notes,
+}) {
+  const response = await fetch(`${apiBase}/api/payments/initiate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-user-id': devUserId,
+    },
+    body: JSON.stringify({ billId, method: 'offline', referenceCode, notes }),
+  });
+  return handleResponse(response);
+}
+
+export async function downloadOfflineSlip({ apiBase, devUserId, paymentId }) {
+  const response = await fetch(`${apiBase}/api/payments/${paymentId}/offline-slip`, {
+    headers: {
+      'x-user-id': devUserId,
+    },
+  });
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || 'Unable to download offline slip');
+  }
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `offline-slip-${paymentId}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+}

@@ -52,8 +52,8 @@ function PaymentMethodSelection() {
     navigate('/payments/card', { state: { savedCardToken: cardToken } });
   }
 
-  function handleCash() {
-    alert('Cash payments can be recorded by field officers soon. Please choose a card for now.');
+  function handleOffline() {
+    navigate('/payments/offline');
   }
 
   const bill = billingSnapshot?.bill;
@@ -172,10 +172,10 @@ function PaymentMethodSelection() {
                 </p>
                 <button
                   type="button"
-                  onClick={handleCash}
-                  className="mt-4 inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-500 transition hover:border-slate-300 hover:text-slate-600"
+                  onClick={handleOffline}
+                  className="mt-4 inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-500 transition hover:border-emerald-200 hover:text-emerald-600"
                 >
-                  Coming soon
+                  Start offline payment
                 </button>
               </div>
             </div>
