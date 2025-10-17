@@ -3,7 +3,7 @@ import Bill from '../models/Bill.js';
 import User from '../models/User.js';
 import Municipality from '../models/Municipality.js';
 import CollectionData from '../models/CollectionData.js';
-import WasteSubmission from '../models/WasteSubmission.js';
+import WasteSubmissionDummy from '../models/WasteSubmissionDummy.js';
 
 function resolvePeriod(period) {
   if (period) {
@@ -57,7 +57,7 @@ export async function generateBillForPeriod({ userId, period }) {
 
   const [collection, submissions] = await Promise.all([
     CollectionData.findOne({ userId, period: resolvedPeriod }).lean(),
-    WasteSubmission.find({ userId, period: resolvedPeriod }).lean(),
+    WasteSubmissionDummy.find({ userId, period: resolvedPeriod }).lean(),
   ]);
 
   const defaultRate = municipality.defaultRate || municipality.fixedRate || 0;
@@ -128,7 +128,7 @@ export async function getBillById({ billId, userId }) {
     User.findById(userId).lean(),
     Municipality.findById(bill.municipalityId).lean(),
     CollectionData.findOne({ userId, period: bill.period }).lean(),
-    WasteSubmission.find({ userId, period: bill.period }).lean(),
+    WasteSubmissionDummy.find({ userId, period: bill.period }).lean(),
   ]);
 
   return {

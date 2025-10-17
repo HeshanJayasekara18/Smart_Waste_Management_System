@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const wasteSubmissionSchema = new mongoose.Schema(
+const wasteSubmissionDummySchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -19,6 +19,6 @@ const wasteSubmissionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-wasteSubmissionSchema.index({ userId: 1, period: 1 });
+wasteSubmissionDummySchema.index({ userId: 1, period: 1 });
 
-export default mongoose.model('WasteSubmission', wasteSubmissionSchema);
+export default mongoose.model('WasteSubmissionDummy', wasteSubmissionDummySchema);

@@ -4,7 +4,7 @@ import connectDB from '../config/db.js';
 import Municipality from '../models/Municipality.js';
 import User from '../models/User.js';
 import CollectionData from '../models/CollectionData.js';
-import WasteSubmission from '../models/WasteSubmission.js';
+import WasteSubmissionDummy from '../models/WasteSubmissionDummy.js';
 
 dotenv.config();
 
@@ -56,8 +56,8 @@ async function seed() {
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
 
-  await WasteSubmission.deleteMany({ userId, period });
-  await WasteSubmission.insertMany([
+  await WasteSubmissionDummy.deleteMany({ userId, period });
+  await WasteSubmissionDummy.insertMany([
     {
       userId,
       type: 'special',
