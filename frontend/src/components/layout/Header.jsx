@@ -3,7 +3,7 @@ import { Bell, Mail } from "lucide-react";
 
 export default function Header({ user }) {
   return (
-    <header className="flex justify-between items-center bg-white shadow px-6 py-3">
+    <header className="flex justify-between items-center bg-white shadow px-6 py-5">
       <div className="flex items-center gap-3">
         <img
           src={user?.avatar || "https://via.placeholder.com/40"}

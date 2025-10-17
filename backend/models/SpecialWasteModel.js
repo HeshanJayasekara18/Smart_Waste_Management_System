@@ -8,15 +8,33 @@ const WasteSubmissionSchema = new mongoose.Schema({
     default: () => `SWR-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`
   },
 
+  submitterName: {
+    type: String,
+    required: [true, 'Submitter name is required'],
+    trim: true,
+    maxlength: [100, 'Name cannot be more than 100 characters']
+  },
+
+  submitterEmail: {
+    type: String,
+    required: [true, 'Email is required'],
+    trim: true,
+    lowercase: true,
+    match: [
+      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+      'Please provide a valid email address'
+    ]
+  },
+
   wasteType: { 
     type: String, 
     enum: ["special", "recyclable"], 
-    required: true 
+    required: [true, 'Waste type is required']
   },
 
-  category: { type: String, 
-    required: true,
-    required: true ,
+  category: { 
+    type: String, 
+    required: [true, 'Category is required'],
     enum: ['bulky', 'e-waste', 'plastic', 'paper', 'glass', 'metal', 'other']
   },
 
@@ -49,8 +67,8 @@ const WasteSubmissionSchema = new mongoose.Schema({
 
   paymentStatus: {
     type: String,
-    enum: ["not-required", "pending", "paid", "failed"],
-    default: "not-required",
+    enum: [ "pending", "paid", "failed"],
+    default: "pending",
   },
 
   paymentAmount: {
