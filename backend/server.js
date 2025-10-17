@@ -1,11 +1,14 @@
-import express from "express";
-import dotenv from "dotenv";
-import connectDB from "./config/db.js";
-import cors from "cors";
-
-import wasteSubmissionRoutes from "./routes/WasteSubmissionRoutes.js";
-import initNotifications from "./init/notifications.js";
-
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import connectDB from './config/db.js';
+import authJwt from './middlewares/authJwt.js';
+import mockUser from './middlewares/mockUser.js';
+import billRoutes from './routes/BillRoutes.js';
+import paymentRoutes from './routes/PaymentRoutes.js';
+import adminRoutes from './routes/AdminRoutes.js';
+import wasteSubmissionRoutes from './routes/WasteSubmissionRoutes.js';
+import initNotifications from './init/notifications.js';
 
 // ✅ Load environment variables
 dotenv.config();
@@ -14,18 +17,32 @@ dotenv.config();
 connectDB();
 
 const app = express();
-app.use(cors());
+
+const corsOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : undefined;
+app.use(
+  cors({
+    origin: corsOrigins || '*',
+    allowedHeaders: ['Content-Type', 'x-user-id', 'authorization'],
+  })
+);
 app.use(express.json());
+
+app.use(authJwt);
+app.use(mockUser);
+
+app.use('/api/bills', billRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/admin', adminRoutes);
 
 const notificationService = initNotifications();
 export { notificationService };
 
 // ✅ Basic test route
-app.get("/", (req, res) => {
-  res.send("Smart Waste Management Backend Running ✅");
+app.get('/', (req, res) => {
+  res.send('Smart Waste Management Backend Running');
 });
 
-app.use("/api/waste-submissions", wasteSubmissionRoutes);
+app.use('/api/waste-submissions', wasteSubmissionRoutes);
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;
