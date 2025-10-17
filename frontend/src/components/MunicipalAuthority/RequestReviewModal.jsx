@@ -60,14 +60,15 @@ export default function RequestReviewModal({ request, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-4">Review Waste Request</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" />
+      <div className="relative bg-white rounded-2xl p-6 sm:p-7 w-[92vw] max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl ring-1 ring-black/5">
+        <h2 className="text-xl sm:text-2xl font-bold mb-5 text-gray-800">Review Waste Request</h2>
 
         {/* Request Details */}
-        <div className="mb-6 p-4 bg-gray-50 rounded">
-          <h3 className="font-semibold mb-2">Request Details</h3>
-          <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="mb-6 p-4 rounded-xl bg-gradient-to-br from-gray-50 to-white border border-gray-100">
+          <h3 className="font-semibold mb-3 text-gray-700">Request Details</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-700">
             <div>Type: {request.wasteType}</div>
             <div>Category: {request.category}</div>
             <div>Quantity: {request.quantity} {request.unit}</div>
@@ -76,12 +77,12 @@ export default function RequestReviewModal({ request, onClose, onSuccess }) {
         </div>
 
         {/* Status Selection */}
-        <div className="mb-4">
-          <label className="block font-medium mb-2">Action *</label>
+        <div className="mb-5">
+          <label className="block font-medium mb-2 text-gray-700">Action *</label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="w-full border rounded px-3 py-2"
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
             required
           >
             <option value="">Select action</option>
@@ -96,16 +97,16 @@ export default function RequestReviewModal({ request, onClose, onSuccess }) {
 
         {/* Payback Amount (manual entry when approved) */}
         {status === 'approved' && (
-          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded">
-            <label className="block font-medium mb-2">Payback Amount</label>
+          <div className="mb-5 p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+            <label className="block font-medium mb-2 text-emerald-900">Payback Amount</label>
             <input
               type="number"
               step="0.01"
               onChange={(e) => setPaybackAmount(parseFloat(e.target.value) || 0)}
-              className="w-full border rounded px-3 py-2"
+              className="w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-emerald-900 placeholder-emerald-700/50 focus:border-emerald-500 focus:ring-emerald-500"
               placeholder="Enter payback amount"
             />
-            <div className="mt-2 text-sm">
+            <div className="mt-3 text-sm text-emerald-900">
               <div>Collection Fee: Rs.{request.paymentAmount}</div>
               <div>Payback: -Rs.{paybackAmount}</div>
               <div className="font-bold">Net Amount: Rs.{(request.paymentAmount - paybackAmount).toFixed(2)}</div>
@@ -115,12 +116,12 @@ export default function RequestReviewModal({ request, onClose, onSuccess }) {
 
         {/* Rejection Reason */}
         {status === 'rejected' && (
-          <div className="mb-4">
-            <label className="block font-medium mb-2">Rejection Reason *</label>
+          <div className="mb-5">
+            <label className="block font-medium mb-2 text-gray-700">Rejection Reason *</label>
             <textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              className="w-full border rounded px-3 py-2"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
               rows="3"
               placeholder="Please provide reason for rejection"
               required
@@ -129,18 +130,18 @@ export default function RequestReviewModal({ request, onClose, onSuccess }) {
         )}
 
         {/* Actions */}
-        <div className="flex space-x-3 mt-6">
+        <div className="flex flex-col sm:flex-row gap-3 mt-6">
           <button
             onClick={handleSubmit}
             disabled={loading || !status}
-            className="flex-1 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:bg-gray-400"
+            className="flex-1 inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 text-white font-medium shadow-sm hover:bg-emerald-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {loading ? 'Processing...' : 'Submit Review'}
           </button>
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 border rounded hover:bg-gray-50"
+            className="px-4 py-2.5 rounded-lg border border-gray-300 bg-white font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
           >
             Cancel
           </button>

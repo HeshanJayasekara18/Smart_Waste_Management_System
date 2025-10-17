@@ -10,7 +10,14 @@ import CollectionRoutesform from "./schedule_component/schedule_manager/Collecti
 import React from "react";
 import { Routes, Route, BrowserRouter } from "react-router-dom";
 import { NotificationProvider } from "./contexts/NotificationContext";
-import AppLayout from "./components/layout/AppLayout";
+
+
+
+import MunicipalAppLayout from './components/layout/MunicipalAppLayout'
+
+
+// Waste submission / notifications
+import ServiceUserAppLayout from './components/layout/ServiceUserAppLayout';
 import WasteSubmissionForm from "./components/WasteSubmission/WasteSubmissionForm/WasteSubmissionForm";
 import WasteSubmissionList from "./components/WasteSubmission/WasteSubmissionList/WasteSubmissionList";
 import MunicipalDashboard from './components/MunicipalAuthority/MunicipalDashboard';
@@ -27,28 +34,26 @@ import PaymentOfflinePendingPage from './components/Payment/PaymentOfflinePendin
 import PaymentHistoryPage from './components/Payment/PaymentHistoryPage';
 import { PaymentProvider } from './components/Payment/PaymentContext';
 
-// Waste submission / notifications
-import { NotificationProvider } from './contexts/NotificationContext';
-import AppLayout from './components/layout/AppLayout';
-import WasteSubmissionForm from './components/WasteSubmission/WasteSubmissionForm/WasteSubmissionForm';
-import WasteSubmissionList from './components/WasteSubmission/WasteSubmissionList/WasteSubmissionList';
+
 
 const ServiceUserLayout = () => (
   <div className="App">
     <NotificationProvider>
-      <AppLayout>
+      <ServiceUserAppLayout>
         <React.Fragment>
           <Routes>
-            <Route path="/b" element={<div>Dashboard</div>} />
             <Route path="/" element={<WasteSubmissionForm />} />
             <Route path="/recyclable" element={<div>Recyclable Page</div>} />
             <Route path="/history" element={<WasteSubmissionList />} />
           </Routes>
         </React.Fragment>
-      </AppLayout>
+      </ServiceUserAppLayout>
     </NotificationProvider>
   </div>
 );
+
+// Municipal routes are declared as nested routes so that
+// MunicipalAppLayout's <Outlet /> renders the matched child route.
 
 // Payment layout to group payment-related routes under /payments
 const PaymentLayout = () => (
@@ -70,24 +75,33 @@ const PaymentLayout = () => (
   </div>
 );
 
-const MunicipalAuthorityLayout = () => (
-  <div className="App">
-  <NotificationProvider>
-    <AppLayout >
-      <React.Fragment>
-        <Routes>
-          <Route path="/" element={<MunicipalDashboard />} />
-        </Routes>
-      </React.Fragment>
-    </AppLayout >
-    </NotificationProvider>
-  </div>
-);
+
 
 export default function App() {
   return (
+    <div>
     <BrowserRouter>
       <Routes>
+
+        <Route path="/*" element={<ServiceUserLayout />} />
+
+        {/* Payments area */}
+        <Route path="/g/*" element={<PaymentLayout />} />
+
+        {/* Municipal area using nested routes so Outlet renders children */}
+        <Route
+          path="/h*"
+          element={
+            <NotificationProvider>
+              <MunicipalAppLayout />
+            </NotificationProvider>
+          }
+        >
+          <Route index element={<MunicipalDashboard />} />
+          <Route path="municipal/dashboard" element={<MunicipalDashboard />} />
+        </Route>
+      </Routes>
+
         <Route path="/schedule-manager-Dash" element={<ScheduleManagerDash />} />
         <Route path="/collectionRoutespage" element={<CollectionRoutesform />} />
       </Routes>
@@ -95,11 +109,3 @@ export default function App() {
   );
 }
 
-export default App;
-       <Route path="/k*" element={<ServiceUserLayout />} />
-       <Route path="/*" element={<MunicipalAuthorityLayout />} />
-       </Routes>
-       </BrowserRouter>
-    </div>
-  );
-}

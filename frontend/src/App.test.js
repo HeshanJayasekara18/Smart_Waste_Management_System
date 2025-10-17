@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+test('renders Service User layout by default', async () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  // Default route now renders ServiceUser layout, assert a known nav item
+  const link = await screen.findByText(/Special Waste Request/i);
+  expect(link).toBeInTheDocument();
 });

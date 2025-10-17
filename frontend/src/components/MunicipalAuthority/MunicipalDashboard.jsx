@@ -36,15 +36,15 @@ export default function MunicipalDashboard() {
   }, [loadData]);
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold">Municipal Authority Dashboard</h1>
-      
+    <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto space-y-6">
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Municipal Authority Dashboard</h1>
+
       <StatisticsCards statistics={statistics} />
-      
+
       <FilterBar filters={filters} setFilters={setFilters} />
-      
-      <RequestsTable 
-        requests={requests} 
+
+      <RequestsTable
+        requests={requests}
         loading={loading}
         onRefresh={loadData}
       />
