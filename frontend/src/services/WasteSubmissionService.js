@@ -20,6 +20,8 @@ const WasteSubmissionService = {
     // map or enrich before sending to API
     const payload = {
       submissionId: data.submissionId || `SUB-${Date.now()}`,
+      submitterName: data.submitterName,
+      submitterEmail: data.submitterEmail,
       wasteType: data.wasteType,
       category: data.category,
       quantity: Number(data.quantity),
@@ -56,7 +58,31 @@ const WasteSubmissionService = {
 
   async remove(id) {
     return WasteSubmissionAPI.remove(id);
-  }
+  },
+
+    async getStats() {
+    try {
+      const submissions = await WasteSubmissionAPI.list();
+
+      const recyclableCount = submissions.filter(
+        (s) => s.wasteType === "recyclable"
+      ).length;
+
+      const totalPayback = submissions.reduce(
+        (sum, s) => sum + (s.paybackAmount || 0),
+        0
+      );
+
+      return { recyclableCount, totalPayback };
+    } catch (error) {
+      console.error("Error calculating stats:", error);
+      throw error;
+    }
+  },
+
+
 };
+
+
 
 export default WasteSubmissionService;

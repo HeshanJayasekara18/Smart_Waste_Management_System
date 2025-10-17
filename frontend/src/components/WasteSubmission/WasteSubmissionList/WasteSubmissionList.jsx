@@ -1,7 +1,7 @@
 // src/components/WasteSubmission/WasteSubmissionList.jsx
 import React, { useEffect, useState } from "react";
-import WasteSubmissionService from "../../services/WasteSubmissionService";
-import { useNotification } from "../../contexts/NotificationContext";
+import WasteSubmissionService from "../../../services/WasteSubmissionService";
+import { useNotification } from "../../../contexts/NotificationContext";
 
 export default function WasteSubmissionList() {
   const [items, setItems] = useState([]);

@@ -1,6 +1,7 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { LogOut, Clock, Trash2, Recycle, LayoutDashboard } from "lucide-react";
+import logo from "../../assets/images/logo.png";
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -16,8 +17,8 @@ export default function Sidebar() {
     <aside className="w-64 bg-white shadow-lg flex flex-col justify-between h-screen">
       <div>
         <div className="flex items-center gap-2 p-4 border-b">
-          <img src="/src/assets/logo.png" alt="Logo" className="w-10 h-10" />
-          <h2 className="text-lg font-semibold text-green-700">TrashTrack</h2>
+          <img src={logo} alt="Logo" className="w-12 h-12" />
+          <h2 className="text-2xl font-semibold text-green-700">TrashTrack</h2>
         </div>
 
         <nav className="mt-6 space-y-1">
