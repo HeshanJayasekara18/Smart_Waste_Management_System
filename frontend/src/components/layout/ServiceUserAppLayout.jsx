@@ -1,6 +1,6 @@
 import React from "react";
-import Sidebar from "./Sidebar";
-import Header from "./Header";
+import Sidebar from "./serviceUserLayout/Sidebar";
+import Header from "./serviceUserLayout/Header";
 
 export default function AppLayout({ children }) {
   const mockUser = {

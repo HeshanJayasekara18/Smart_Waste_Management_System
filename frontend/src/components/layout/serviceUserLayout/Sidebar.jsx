@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { LogOut, Clock, Trash2, Recycle, LayoutDashboard } from "lucide-react";
-import logo from "../../assets/images/logo.png";
+import logo from "../../../assets/images/logo.png";
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -9,7 +9,7 @@ export default function Sidebar() {
   const navItems = [
     { label: "Dashboard", icon: <LayoutDashboard size={18} />, path: "/h" },
     { label: "Special Waste Request", icon: <Trash2 size={18} />, path: "/" },
-    { label: "Recyclable Submission", icon: <Recycle size={18} />, path: "/recyclable" },
+    { label: "Scedules", icon: <Recycle size={18} />, path: "/Scedules" },
     { label: "History", icon: <Clock size={18} />, path: "/history" },
   ];
 

@@ -15,6 +15,8 @@ export function getAllowedNextStatuses(currentStatus) {
       return ['completed']
     case 'rejected':
       return []
+    case 'completed':
+      return []
     default:
       return ['approved', 'rejected', 'in-progress', 'completed']
   }
@@ -28,6 +30,9 @@ export function canTransition(currentStatus, nextStatus) {
 export function getDisallowMessage(currentStatus, nextStatus) {
   if (currentStatus === 'rejected') {
     return 'Cannot change status once it is rejected.'
+  }
+   if (currentStatus === 'completed') {
+    return 'Cannot change status once it is completed.'
   }
   if (currentStatus === 'approved') {
     return 'From approved, you can only change to In Progress or Completed.'

@@ -7,33 +7,41 @@ const STATUS_COLORS = {
   approved: 'bg-green-100 text-green-800',
   rejected: 'bg-red-100 text-red-800',
   'in-progress': 'bg-blue-100 text-blue-800',
-  completed: 'bg-gray-100 text-gray-800'
+  completed: 'bg-green-300 text-gray-800'
 };
 
 export default function RequestsTable({ requests, loading, onRefresh }) {
   const [selectedRequest, setSelectedRequest] = useState(null);
 
   if (loading) {
-    return <div className="text-center py-8">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="inline-flex items-center gap-3 text-gray-600">
+          <span className="h-4 w-4 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+          <span className="text-sm">Loading...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Request ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Request ID</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Category</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Quantity</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-100">
             {requests.map((request, index) => (
-              <tr key={request._id} className="hover:bg-gray-50">
+              <tr key={request._id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   REQ-{index + 1}
                 </td>
@@ -41,14 +49,14 @@ export default function RequestsTable({ requests, loading, onRefresh }) {
                 <td className="px-6 py-4 whitespace-nowrap text-sm capitalize">{request.category}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{request.quantity} {request.unit}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[request.status]}`}>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ring-1 ring-inset ring-black/5 ${STATUS_COLORS[request.status]}`}>
                     {request.status}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button
                     onClick={() => setSelectedRequest(request)}
-                    className="text-blue-600 hover:text-blue-800 mr-3"
+                    className="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-700 hover:underline mr-3"
                     title="Review Request"
                   >
                     <Eye size={18} />
@@ -58,6 +66,7 @@ export default function RequestsTable({ requests, loading, onRefresh }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {selectedRequest && (
