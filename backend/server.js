@@ -1,23 +1,27 @@
-const express = require("express");
-const dotenv = require("dotenv");
-const connectDB = require("./config/db");
-const cors = require("cors");
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const connectDB = require('./config/db');
+const scheduleRoutes = require('./routes/ScheduleRoutes');
+const collectionRouteRoutes = require('./routes/CollectionRouteRoutes');
+const errorHandler = require('./middlewares/ErrorMiddleware');
 
-// ✅ Load environment variables
 dotenv.config();
-
-// ✅ Connect to MongoDB
 connectDB();
 
 const app = express();
-app.use(cors());
 app.use(express.json());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_ORIGIN || 'http://localhost:3000',
+    credentials: true,
+  })
+);
 
-// ✅ Basic test route
-app.get("/", (req, res) => {
-  res.send("Smart Waste Management Backend Running ✅");
-});
+// Clean routing structure
+app.use('/api/schedules', scheduleRoutes);
+app.use('/api/collection-routes', collectionRouteRoutes);
+app.use(errorHandler);
 
-// ✅ Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
