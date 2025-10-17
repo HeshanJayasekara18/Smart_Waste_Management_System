@@ -22,6 +22,10 @@ export class WasteFormValidator {
       errors.quantity = "Quantity must be greater than 0";
     }
 
+      if (!form.pickupDate) {
+      errors.pickupDate = 'Pickup date is required';
+    }
+
     // Address validation
     const addressErrors = this.validateAddress(form.collectionAddress);
     if (Object.keys(addressErrors).length > 0) {

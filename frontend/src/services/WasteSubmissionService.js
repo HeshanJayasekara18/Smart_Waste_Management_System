@@ -11,6 +11,7 @@ const validateSubmission = (data) => {
   if (!data.category) throw new Error("Category is required.");
   if (!data.quantity || data.quantity <= 0) throw new Error("Quantity must be greater than 0.");
   if (!data.unit) throw new Error("Unit is required.");
+  if (!data.pickupDate) throw new Error("Unit is required.");
   // add more domain validations as needed
 };
 
