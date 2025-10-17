@@ -35,7 +35,8 @@ export default class WasteSubmissionController {
       });
     } catch (error) {
       console.error("Error creating waste submission:", error);
-      res.status(500).json({ message: "Error creating waste submission", error: error.message });
+      const code = error?.name === 'ValidationError' ? 400 : 500;
+      res.status(code).json({ message: "Error creating waste submission", error: error.message });
     }
   }
 
@@ -66,12 +67,12 @@ export default class WasteSubmissionController {
   async updateWasteSubmissionStatus(req, res) {
     try {
       const { id } = req.params;
-      const { status, paymentStatus, paymentAmount } = req.body;
+      const { status, paybackAmount, rejectionReason } = req.body;
 
       const updated = await wasteSubmissionService.updateSubmissionStatus(id, {
         status,
-        paymentStatus,
-        paymentAmount,
+        paybackAmount,
+        rejectionReason,
       });
 
       if (!updated) {
@@ -89,7 +90,8 @@ export default class WasteSubmissionController {
         data: updated,
       });
     } catch (error) {
-      res.status(500).json({ message: "Error updating waste submission", error: error.message });
+      const code = /not found/i.test(error.message) ? 404 : /invalid status/i.test(error.message) ? 400 : 500;
+      res.status(code).json({ message: "Error updating waste submission status", error: error.message });
     }
   }
 
