@@ -68,6 +68,7 @@ describe('CollectionRouteService', () => {
   });
 
   describe('createCollectionRoute', () => {
+    // Positive case: saves sanitized route after uniqueness check succeeds.
     it('persists sanitized route and ensures uniqueness', async () => {
       const payload = buildPayload();
 
@@ -88,6 +89,29 @@ describe('CollectionRouteService', () => {
       expect(result).toMatchObject({ id: 'route-123', routeCode: 'R1', zone: 'Zone A' });
     });
 
+    // Edge case: optional strings and arrays default when omitted.
+    it('trims optional strings and defaults collections when omitted', async () => {
+      const payload = buildPayload({
+        zone: '  ',
+        coverage: null,
+        scheduleSummary: '',
+        defaultBins: undefined,
+        timeWindows: undefined,
+        alerts: undefined,
+      });
+
+      await collectionRouteService.createCollectionRoute(payload);
+
+      const saved = CollectionRoute.mock.calls[0][0];
+      expect(saved.zone).toBeUndefined();
+      expect(saved.coverage).toBeUndefined();
+      expect(saved.scheduleSummary).toBeUndefined();
+      expect(saved.defaultBins).toEqual([]);
+      expect(saved.timeWindows).toEqual([]);
+      expect(saved.alerts).toEqual([]);
+    });
+
+    // Negative case: rejects duplicate route codes to enforce uniqueness.
     it('rejects duplicate route codes', async () => {
       const payload = buildPayload();
       const leanMock = jest.fn().mockResolvedValue({ _id: 'existing' });
@@ -97,6 +121,7 @@ describe('CollectionRouteService', () => {
       expect(leanMock).toHaveBeenCalled();
     });
 
+    // Negative case: time window ordering validation.
     it('validates structural constraints', async () => {
       const payload = buildPayload({
         timeWindows: [{ label: 'Invalid', start: baseEnd, end: baseStart }],
@@ -105,84 +130,98 @@ describe('CollectionRouteService', () => {
       await expect(collectionRouteService.createCollectionRoute(payload)).rejects.toThrow('timeWindows[0] start must be before end');
     });
 
+    // Negative case: vehicle field must be well-formed object.
     it('rejects invalid vehicle shape', async () => {
       const payload = buildPayload({ vehicle: 'truck' });
 
       await expect(collectionRouteService.createCollectionRoute(payload)).rejects.toThrow('vehicle must be provided');
     });
 
+    // Negative case: driver field must be object.
     it('rejects invalid driver shape', async () => {
       const payload = buildPayload({ driver: 123 });
 
       await expect(collectionRouteService.createCollectionRoute(payload)).rejects.toThrow('driver must be provided');
     });
 
+    // Negative case: coordinate payload must be object.
     it('rejects invalid coordinate type', async () => {
       const payload = buildPayload({ coordinates: 'not-object' });
 
       await expect(collectionRouteService.createCollectionRoute(payload)).rejects.toThrow('coordinates must be provided');
     });
 
+    // Negative case: coordinate values must parse to numbers.
     it('rejects invalid coordinate values', async () => {
       const payload = buildPayload({ coordinates: { lat: 'abc', lng: 70 } });
 
       await expect(collectionRouteService.createCollectionRoute(payload)).rejects.toThrow('coordinates.lat and coordinates.lng must be valid numbers');
     });
 
+    // Negative case: enforce array structure for bins.
     it('rejects non-array bins', async () => {
       const payload = buildPayload({ defaultBins: 'BIN-1' });
 
       await expect(collectionRouteService.createCollectionRoute(payload)).rejects.toThrow('defaultBins must be an array');
     });
 
+    // Negative case: time windows must be arrays of objects.
     it('rejects malformed time windows input', async () => {
       const payload = buildPayload({ timeWindows: 'not-an-array' });
 
       await expect(collectionRouteService.createCollectionRoute(payload)).rejects.toThrow('timeWindows must be an array');
     });
 
+    // Negative case: alerts must be array.
     it('rejects malformed alerts input', async () => {
       const payload = buildPayload({ alerts: 'oops' });
 
       await expect(collectionRouteService.createCollectionRoute(payload)).rejects.toThrow('alerts must be an array');
     });
 
+    // Negative case: enum validation for alert type.
     it('rejects alert with invalid enum', async () => {
       const payload = buildPayload({ alerts: [{ type: 'BAD', severity: 'LOW', message: 'Alert' }] });
 
       await expect(collectionRouteService.createCollectionRoute(payload)).rejects.toThrow('alert type is invalid');
     });
 
+    // Negative case: time window entries must be objects.
     it('rejects time window entries that are not objects', async () => {
       const payload = buildPayload({ timeWindows: [123] });
 
       await expect(collectionRouteService.createCollectionRoute(payload)).rejects.toThrow('timeWindows[0] must be an object');
     });
 
+    // Negative case: alert entries must be objects.
     it('rejects alert entries that are not objects', async () => {
       const payload = buildPayload({ alerts: [42] });
 
       await expect(collectionRouteService.createCollectionRoute(payload)).rejects.toThrow('alerts[0] must be an object');
     });
 
+    // Negative case: severity is mandatory on alert.
     it('rejects alert missing severity', async () => {
       const payload = buildPayload({ alerts: [{ type: 'IOT_WARNING', message: 'Alert' }] });
 
       await expect(collectionRouteService.createCollectionRoute(payload)).rejects.toThrow('alert severity must be a string');
     });
 
+    // Negative case: message required for alert.
     it('rejects alert missing required message', async () => {
       const payload = buildPayload({ alerts: [{ type: 'IOT_WARNING', severity: 'LOW' }] });
 
       await expect(collectionRouteService.createCollectionRoute(payload)).rejects.toThrow('alerts[0].message must be a non-empty string');
     });
 
+    // Negative case: date parsing validation for windows.
     it('rejects time window with invalid date strings', async () => {
       const payload = buildPayload({ timeWindows: [{ label: 'T', start: 'bad-date', end: baseEnd }] });
 
       await expect(collectionRouteService.createCollectionRoute(payload)).rejects.toThrow('timeWindows[0].start must be a valid date');
     });
 
+    // Negative case: alert reportedAt must be valid date.
     it('rejects alert with invalid reportedAt', async () => {
       const payload = buildPayload({ alerts: [{ type: 'IOT_WARNING', severity: 'LOW', message: 'A', reportedAt: 'bad-date' }] });
 
@@ -191,6 +230,7 @@ describe('CollectionRouteService', () => {
   });
 
   describe('listCollectionRoutes', () => {
+    // Positive case: normalizes filters and sorts results.
     it('normalizes filters and sorts by name', async () => {
       const sort = jest.fn().mockResolvedValue(['route']);
       CollectionRoute.find.mockReturnValueOnce({ sort });
@@ -204,6 +244,7 @@ describe('CollectionRouteService', () => {
   });
 
   describe('getCollectionRoute', () => {
+    // Positive case: returns route when found.
     it('returns document when found', async () => {
       const doc = buildRouteDoc();
       CollectionRoute.findById.mockResolvedValueOnce(doc);
@@ -213,12 +254,14 @@ describe('CollectionRouteService', () => {
       expect(result).toBe(doc);
     });
 
+    // Negative case: throws when route missing.
     it('throws when route is missing', async () => {
       await expect(collectionRouteService.getCollectionRoute('missing')).rejects.toThrow('Collection route not found');
     });
   });
 
   describe('updateCollectionRoute', () => {
+    // Positive case: applies updates and saves route.
     it('applies sanitized updates and enforces unique route code', async () => {
       const doc = buildRouteDoc({ routeCode: 'R1' });
       CollectionRoute.findById.mockResolvedValueOnce(doc);
@@ -242,12 +285,14 @@ describe('CollectionRouteService', () => {
       expect(result.routeCode).toBe('R2');
     });
 
+    // Negative case: throws when target route missing.
     it('throws when route to update is missing', async () => {
       await expect(collectionRouteService.updateCollectionRoute('missing', { name: 'New' })).rejects.toThrow('Collection route not found');
     });
   });
 
   describe('deleteCollectionRoute', () => {
+    // Positive case: deletes existing route.
     it('removes existing route', async () => {
       const doc = buildRouteDoc();
       CollectionRoute.findByIdAndDelete.mockResolvedValueOnce(doc);
@@ -258,6 +303,7 @@ describe('CollectionRouteService', () => {
       expect(result).toBe(doc);
     });
 
+    // Negative case: throws when route missing.
     it('throws when route does not exist', async () => {
       await expect(collectionRouteService.deleteCollectionRoute('missing')).rejects.toThrow('Collection route not found');
     });

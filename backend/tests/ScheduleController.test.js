@@ -19,6 +19,7 @@ describe('ScheduleController', () => {
   });
 
   describe('createSchedule', () => {
+    // Positive case: responds with 201 when service succeeds.
     it('returns 201 with created schedule', async () => {
       const req = { body: { routeId: 'R1' } };
       scheduleService.createSchedule.mockResolvedValueOnce({ id: 'created' });
@@ -32,6 +33,7 @@ describe('ScheduleController', () => {
       expect(next).not.toHaveBeenCalled();
     });
 
+    // Negative case: propagates service errors via next().
     it('forwards errors', async () => {
       const req = { body: {} };
       const error = new Error('fail');
@@ -45,6 +47,7 @@ describe('ScheduleController', () => {
   });
 
   describe('listSchedules', () => {
+    // Positive case: returns schedules with normalized filters.
     it('extracts query filters and returns schedules', async () => {
       const req = { query: { status: 'PLANNED', extra: 'ignored' } };
       const res = buildRes();
@@ -58,6 +61,7 @@ describe('ScheduleController', () => {
       expect(next).not.toHaveBeenCalled();
     });
 
+    // Negative case: forwards errors when listing fails.
     it('forwards errors when listing fails', async () => {
       const req = { query: {} };
       const res = buildRes();
@@ -71,6 +75,7 @@ describe('ScheduleController', () => {
   });
 
   describe('getSchedule', () => {
+    // Positive case: returns schedule payload.
     it('returns schedule by id', async () => {
       const req = { params: { id: '123' } };
       const res = buildRes();
@@ -82,6 +87,7 @@ describe('ScheduleController', () => {
       expect(res.json).toHaveBeenCalledWith({ id: '123' });
     });
 
+    // Negative case: forwards not-found errors.
     it('forwards errors when get fails', async () => {
       const req = { params: { id: 'missing' } };
       const res = buildRes();
@@ -95,6 +101,7 @@ describe('ScheduleController', () => {
   });
 
   describe('updateSchedule', () => {
+    // Positive case: responds with updated schedule.
     it('returns updated schedule', async () => {
       const req = { params: { id: '123' }, body: { notes: 'updated' } };
       const res = buildRes();
@@ -106,6 +113,7 @@ describe('ScheduleController', () => {
       expect(res.json).toHaveBeenCalledWith({ id: '123', notes: 'updated' });
     });
 
+    // Negative case: forwards update errors.
     it('forwards errors when update fails', async () => {
       const req = { params: { id: '123' }, body: {} };
       const res = buildRes();
@@ -119,6 +127,7 @@ describe('ScheduleController', () => {
   });
 
   describe('deleteSchedule', () => {
+    // Positive case: responds with 204 on successful delete.
     it('responds with 204 on success', async () => {
       const req = { params: { id: '123' } };
       const res = buildRes();
@@ -131,6 +140,7 @@ describe('ScheduleController', () => {
       expect(res.send).toHaveBeenCalledWith();
     });
 
+    // Negative case: forwards delete errors.
     it('forwards errors when delete fails', async () => {
       const req = { params: { id: '123' } };
       const res = buildRes();
@@ -144,6 +154,7 @@ describe('ScheduleController', () => {
   });
 
   describe('changeScheduleStatus', () => {
+    // Positive case: returns status-updated schedule.
     it('returns updated schedule with new status', async () => {
       const req = { params: { id: '123' }, body: { status: 'IN_PROGRESS' } };
       const res = buildRes();
@@ -155,6 +166,7 @@ describe('ScheduleController', () => {
       expect(res.json).toHaveBeenCalledWith({ id: '123', status: 'IN_PROGRESS' });
     });
 
+    // Negative case: forwards status change errors.
     it('forwards errors when status change fails', async () => {
       const req = { params: { id: '123' }, body: { status: 'IN_PROGRESS' } };
       const res = buildRes();
@@ -168,6 +180,7 @@ describe('ScheduleController', () => {
   });
 
   describe('recordScheduleAlert', () => {
+    // Positive case: returns 201 when alert recorded.
     it('returns 201 with updated schedule', async () => {
       const req = { params: { id: '123' }, body: { message: 'alert' } };
       const res = buildRes();
@@ -180,6 +193,7 @@ describe('ScheduleController', () => {
       expect(res.json).toHaveBeenCalledWith({ id: '123', alerts: [] });
     });
 
+    // Negative case: forwards record errors.
     it('forwards errors when alert record fails', async () => {
       const req = { params: { id: '123' }, body: { message: 'alert' } };
       const res = buildRes();
@@ -193,6 +207,7 @@ describe('ScheduleController', () => {
   });
 
   describe('resolveScheduleAlert', () => {
+    // Positive case: returns resolved alerts array.
     it('returns schedule with resolved alert', async () => {
       const req = { params: { id: '123', alertId: 'a1' } };
       const res = buildRes();
@@ -204,6 +219,7 @@ describe('ScheduleController', () => {
       expect(res.json).toHaveBeenCalledWith({ id: '123', alerts: [] });
     });
 
+    // Negative case: forwards resolve errors.
     it('forwards errors when alert resolve fails', async () => {
       const req = { params: { id: '123', alertId: 'a1' } };
       const res = buildRes();

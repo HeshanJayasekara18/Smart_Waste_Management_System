@@ -1,6 +1,7 @@
 const Schedule = require('../models/Schedule');
 
 describe('Schedule model validation', () => {
+  // Negative case: rejects schedules with empty bin identifiers.
   it('rejects invalid bin identifiers', async () => {
     const schedule = new Schedule({
       routeId: 'R1',
@@ -14,6 +15,7 @@ describe('Schedule model validation', () => {
     await expect(schedule.validate()).rejects.toThrow('Bin identifiers must be non-empty strings');
   });
 
+  // Negative case: pre-validate hook ensures start precedes end time.
   it('rejects start time not before end time', async () => {
     const schedule = new Schedule({
       routeId: 'R1',
