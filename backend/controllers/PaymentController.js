@@ -5,7 +5,7 @@ async function initiatePayment(req, res) {
     if (!req.user || !req.user.id) {
       return res.status(401).json({ message: 'User not resolved' });
     }
-    const { billId, method } = req.body || {};
+    const { billId, method, cardInfo } = req.body || {};
     if (!billId || !method) {
       return res.status(400).json({ message: 'billId and method required' });
     }
@@ -13,13 +13,15 @@ async function initiatePayment(req, res) {
       userId: req.user.id,
       billId,
       method,
+      cardInfo,
     });
     return res.json({
       paymentId: result.payment._id,
       requiresOtp: result.requiresOtp,
+      maskedCard: result.maskedCard,
       message: result.requiresOtp
-        ? 'OTP sent (dev mode logs the code)'
-        : 'Payment recorded',
+        ? 'OTP sent to your registered email'
+        : 'Payment recorded and awaiting admin confirmation',
     });
   } catch (error) {
     return res.status(400).json({ message: error.message });
@@ -40,7 +42,10 @@ async function confirmPayment(req, res) {
       paymentId,
       otp,
     });
-    return res.json({ message: 'Payment successful', paymentId: result.payment._id });
+    return res.json({
+      message: 'Payment successful, receipt emailed',
+      paymentId: result.payment._id,
+    });
   } catch (error) {
     return res.status(400).json({ message: error.message });
   }

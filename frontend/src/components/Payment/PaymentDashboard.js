@@ -200,13 +200,21 @@ function PaymentDashboard() {
       // Endpoint: POST /api/payments/initiate
       // Body: { billId, method: 'card'|'offline' }
       // Returns: { paymentId, requiresOtp }
+      const cardInfo = {
+        number: '4242424242424242',
+        expMonth: '08',
+        expYear: '28',
+        brand: 'visa',
+        holderName: user?.name || 'Trash Track Resident',
+      };
+
       const initiateRes = await fetch(`${API_BASE}/api/payments/initiate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-user-id': DEV_USER_ID,
         },
-        body: JSON.stringify({ billId: bill._id, method: 'card' }),
+        body: JSON.stringify({ billId: bill._id, method: 'card', cardInfo }),
       });
 
       const initiateData = await initiateRes.json();
@@ -232,7 +240,7 @@ function PaymentDashboard() {
         }
 
         const otpInput = window.prompt(
-          'Enter the OTP sent to your device (for dev, check terminal logs):',
+          'Enter the OTP sent to your email (check terminal logs in dev mode):',
           otpPrefill
         );
         if (!otpInput) {

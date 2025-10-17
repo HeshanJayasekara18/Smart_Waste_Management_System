@@ -1,45 +1,147 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 const Bill = require('../models/Bill');
 const Payment = require('../models/Payment');
+const User = require('../models/User');
+const ReceiptService = require('./ReceiptService');
+const Mailer = require('../utils/mailer');
+
+const OTP_EXPIRY_MINUTES = 5;
 
 function generateOtp() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-async function initiatePayment({ userId, billId, method }) {
+function hashOtp(otp) {
+  return crypto.createHash('sha256').update(String(otp)).digest('hex');
+}
+
+async function loadBillWithUser({ billId, userId }) {
+  const bill = await Bill.findOne({ _id: billId, userId });
+  if (!bill) {
+    throw new Error('Bill not found');
+  }
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new Error('User not found');
+  }
+  return { bill, user };
+}
+
+async function sendOtpEmail({ user, payment, otp }) {
+  const subject = 'Your Smart Waste payment OTP';
+  const text = `Hi ${user.name},\n\nUse the following one-time password to confirm your payment: ${otp}.\n\nPayment reference: ${payment.gatewayRef}\nThis code expires in ${OTP_EXPIRY_MINUTES} minutes.\n\nIf you did not initiate this payment, please contact support immediately.`;
+  try {
+    await Mailer.sendMail({
+      to: user.email,
+      subject,
+      text,
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[dev] Failed to send OTP email. Make sure SMTP settings are configured.', error.message);
+    } else {
+      throw new Error('Unable to send OTP email');
+    }
+  }
+}
+
+async function deliverReceipt({ payment, bill, user }) {
+  const { filePath, fileName } = await ReceiptService.generateReceipt({ payment, bill, user });
+  payment.receiptPath = filePath;
+  payment.receiptSentAt = new Date();
+  payment.paidAt = payment.paidAt || new Date();
+  await payment.save();
+
+  try {
+    await Mailer.sendMail({
+      to: user.email,
+      subject: 'Smart Waste payment receipt',
+      text: `Hi ${user.name},\n\nYour payment for the ${bill.period} bill has been marked as paid. We've attached the receipt for your records.`,
+      attachments: [
+        {
+          filename: fileName,
+          path: filePath,
+        },
+      ],
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[dev] Failed to send receipt email.', error.message);
+    } else {
+      throw new Error('Unable to send receipt email');
+    }
+  }
+}
+
+async function initiatePayment({ userId, billId, method, cardInfo = {}, bankSlipPath = '' }) {
   if (!mongoose.Types.ObjectId.isValid(billId)) {
     throw new Error('Invalid bill id');
   }
 
-  const bill = await Bill.findOne({ _id: billId, userId });
-  if (!bill) {
-    throw new Error('Bill not found');
+  const { bill, user } = await loadBillWithUser({ billId, userId });
+
+  if (!['card', 'offline'].includes(method)) {
+    throw new Error('Unsupported payment method');
   }
 
   if (bill.status === 'paid') {
     throw new Error('Bill already paid');
   }
 
-  const payment = await Payment.create({
+  const basePayload = {
     billId,
     userId,
     method,
-    status: method === 'card' ? 'otp_pending' : 'initiated',
+    amount: bill.amount,
+    currency: 'LKR',
     gatewayRef: `GW-${Date.now()}`,
-    otp: method === 'card' ? generateOtp() : '',
-    otpExpiresAt:
-      method === 'card'
-        ? new Date(Date.now() + 5 * 60 * 1000)
-        : null,
-  });
+    bankSlipPath,
+  };
 
-  if (method === 'card' && process.env.NODE_ENV !== 'production') {
-    console.log(`[dev] OTP for payment ${payment._id}: ${payment.otp}`);
+  let otp;
+  if (method === 'card') {
+    if (!cardInfo || !cardInfo.number || !cardInfo.expMonth || !cardInfo.expYear) {
+      throw new Error('Complete card information required');
+    }
+    otp = generateOtp();
+    const last4 = String(cardInfo.number).slice(-4);
+    const payment = await Payment.create({
+      ...basePayload,
+      status: 'otp_pending',
+      otpHash: hashOtp(otp),
+      otpExpiresAt: new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000),
+      otpDebug: process.env.NODE_ENV !== 'production' ? otp : '',
+      card: {
+        brand: cardInfo.brand || 'card',
+        last4,
+        expMonth: cardInfo.expMonth,
+        expYear: cardInfo.expYear,
+        holderName: cardInfo.holderName || user.name,
+      },
+    });
+
+    await sendOtpEmail({ user, payment, otp });
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[dev] OTP for payment ${payment._id}: ${otp}`);
+    }
+
+    return {
+      payment,
+      requiresOtp: true,
+      maskedCard: `•••• ${last4}`,
+    };
   }
+
+  const payment = await Payment.create({
+    ...basePayload,
+    status: 'initiated',
+  });
 
   return {
     payment,
-    requiresOtp: method === 'card',
+    requiresOtp: false,
   };
 }
 
@@ -61,21 +163,38 @@ async function confirmPayment({ userId, paymentId, otp }) {
     if (payment.status !== 'otp_pending') {
       throw new Error('Payment not awaiting OTP');
     }
-    if (!otp || otp !== payment.otp) {
-      throw new Error('Invalid OTP');
+    if (!otp) {
+      throw new Error('OTP required');
     }
     if (payment.otpExpiresAt && payment.otpExpiresAt < new Date()) {
       throw new Error('OTP expired');
     }
+    if (hashOtp(otp) !== payment.otpHash) {
+      throw new Error('Invalid OTP');
+    }
+  }
+
+  const bill = await Bill.findById(payment.billId);
+  if (!bill) {
+    throw new Error('Bill not found for payment');
+  }
+  const user = await User.findById(payment.userId);
+  if (!user) {
+    throw new Error('User not found for payment');
   }
 
   payment.status = 'authorized';
   payment.confirmedByAdmin = payment.method !== 'card';
-  payment.otp = '';
+  payment.otpHash = '';
   payment.otpExpiresAt = null;
+  payment.otpDebug = '';
+  payment.paidAt = new Date();
   await payment.save();
 
-  await Bill.updateOne({ _id: payment.billId, userId }, { status: 'paid' });
+  bill.status = 'paid';
+  await bill.save();
+
+  await deliverReceipt({ payment, bill, user });
 
   return { payment };
 }
@@ -90,10 +209,24 @@ async function adminConfirmOffline({ paymentId }) {
     throw new Error('Payment not found');
   }
 
+  const bill = await Bill.findById(payment.billId);
+  if (!bill) {
+    throw new Error('Bill not found for payment');
+  }
+  const user = await User.findById(payment.userId);
+  if (!user) {
+    throw new Error('User not found for payment');
+  }
+
   payment.status = 'authorized';
   payment.confirmedByAdmin = true;
+  payment.paidAt = new Date();
   await payment.save();
-  await Bill.updateOne({ _id: payment.billId }, { status: 'paid' });
+
+  bill.status = 'paid';
+  await bill.save();
+
+  await deliverReceipt({ payment, bill, user });
 
   return { payment };
 }
@@ -103,12 +236,14 @@ async function getPaymentOtpDev({ paymentId, userId }) {
     throw new Error('Invalid payment id');
   }
 
-  const payment = await Payment.findOne({ _id: paymentId, userId }).lean();
+  const payment = await Payment.findOne({ _id: paymentId, userId })
+    .select('+otpDebug')
+    .lean();
   if (!payment) {
     throw new Error('Payment not found');
   }
 
-  return { otp: payment.otp, status: payment.status };
+  return { otp: payment.otpDebug, status: payment.status };
 }
 
 module.exports = {
