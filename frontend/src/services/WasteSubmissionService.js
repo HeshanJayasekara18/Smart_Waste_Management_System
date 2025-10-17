@@ -31,7 +31,7 @@ const WasteSubmissionService = {
       location: data.location,
       collectionAddress: data.collectionAddress,
       paymentRequired: !!data.paymentRequired,
-      paymentStatus: data.paymentStatus || "not-required",
+      paymentStatus: data.paymentStatus || "pending",
       paymentAmount: data.paymentAmount ? Number(data.paymentAmount) : 0,
     };
     const result = await WasteSubmissionAPI.create(payload);
@@ -57,6 +57,11 @@ const WasteSubmissionService = {
     return WasteSubmissionAPI.updateStatus(id, statusPayload);
   },
 
+  // Alias with clearer intent for consumers
+  async updateRequestStatus(id, payload) {
+    return WasteSubmissionAPI.updateStatus(id, payload);
+  },
+
   async remove(id) {
     return WasteSubmissionAPI.remove(id);
   },
@@ -77,6 +82,28 @@ const WasteSubmissionService = {
       return { recyclableCount, totalPayback };
     } catch (error) {
       console.error("Error calculating stats:", error);
+      throw error;
+    }
+  },
+
+  // Dashboard statistics: totals for requests by status
+  async getStatistics() {
+    try {
+      const submissions = await WasteSubmissionAPI.list();
+
+      const list = Array.isArray(submissions) ? submissions : [];
+      const totalRequests = list.length;
+
+      let approved = 0, pending = 0, rejected = 0;
+      for (const s of list) {
+        if (s.status === 'approved') approved++;
+        else if (s.status === 'pending') pending++;
+        else if (s.status === 'rejected') rejected++;
+      }
+
+      return { totalRequests, approved, pending, rejected };
+    } catch (error) {
+      console.error("Error calculating dashboard statistics:", error);
       throw error;
     }
   },

@@ -1,6 +1,11 @@
-import './App.css';
-import React from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import React from "react";
+import { Routes, Route, BrowserRouter } from "react-router-dom";
+import { NotificationProvider } from "./contexts/NotificationContext";
+import AppLayout from "./components/layout/AppLayout";
+import WasteSubmissionForm from "./components/WasteSubmission/WasteSubmissionForm/WasteSubmissionForm";
+import WasteSubmissionList from "./components/WasteSubmission/WasteSubmissionList/WasteSubmissionList";
+import MunicipalDashboard from './components/MunicipalAuthority/MunicipalDashboard';
+
 
 // Payment pages
 import PaymentDashboard from './components/Payment/PaymentDashboard';
@@ -56,19 +61,28 @@ const PaymentLayout = () => (
   </div>
 );
 
+const MunicipalAuthorityLayout = () => (
+  <div className="App">
+  <NotificationProvider>
+    <AppLayout >
+      <React.Fragment>
+        <Routes>
+          <Route path="/" element={<MunicipalDashboard />} />
+        </Routes>
+      </React.Fragment>
+    </AppLayout >
+    </NotificationProvider>
+  </div>
+);
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Mount payment routes under /payments/*/}
-        <Route path="/payments/*" element={<PaymentLayout />} />
-
-        {/* Service user / waste-submission routes at root */}
-        <Route path="/*" element={<ServiceUserLayout />} />
-
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+       <Route path="/k*" element={<ServiceUserLayout />} />
+       <Route path="/*" element={<MunicipalAuthorityLayout />} />
+       </Routes>
+       </BrowserRouter>
+    </div>
   );
 }
