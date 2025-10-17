@@ -1,6 +1,8 @@
 import './App.css';
 import React from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+
+// Payment pages
 import PaymentDashboard from './components/Payment/PaymentDashboard';
 import PaymentMethodSelection from './components/Payment/PaymentMethodSelection';
 import PaymentCardForm from './components/Payment/PaymentCardForm';
@@ -11,24 +13,62 @@ import PaymentOfflinePendingPage from './components/Payment/PaymentOfflinePendin
 import PaymentHistoryPage from './components/Payment/PaymentHistoryPage';
 import { PaymentProvider } from './components/Payment/PaymentContext';
 
-function App() {
-  return (
+// Waste submission / notifications
+import { NotificationProvider } from './contexts/NotificationContext';
+import AppLayout from './components/layout/AppLayout';
+import WasteSubmissionForm from './components/WasteSubmission/WasteSubmissionForm/WasteSubmissionForm';
+import WasteSubmissionList from './components/WasteSubmission/WasteSubmissionList/WasteSubmissionList';
+
+const ServiceUserLayout = () => (
+  <div className="App">
+    <NotificationProvider>
+      <AppLayout>
+        <React.Fragment>
+          <Routes>
+            <Route path="/b" element={<div>Dashboard</div>} />
+            <Route path="/" element={<WasteSubmissionForm />} />
+            <Route path="/recyclable" element={<div>Recyclable Page</div>} />
+            <Route path="/history" element={<WasteSubmissionList />} />
+          </Routes>
+        </React.Fragment>
+      </AppLayout>
+    </NotificationProvider>
+  </div>
+);
+
+// Payment layout to group payment-related routes under /payments
+const PaymentLayout = () => (
+  <div className="App">
     <PaymentProvider>
-      <BrowserRouter>
+      <React.Fragment>
         <Routes>
           <Route path="/" element={<PaymentDashboard />} />
-          <Route path="/payments/select" element={<PaymentMethodSelection />} />
-          <Route path="/payments/card" element={<PaymentCardForm />} />
-          <Route path="/payments/otp" element={<PaymentOtpPage />} />
-          <Route path="/payments/success" element={<PaymentSuccessPage />} />
-          <Route path="/payments/offline" element={<PaymentOfflinePage />} />
-          <Route path="/payments/offline/pending" element={<PaymentOfflinePendingPage />} />
-          <Route path="/payments/history" element={<PaymentHistoryPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="select" element={<PaymentMethodSelection />} />
+          <Route path="card" element={<PaymentCardForm />} />
+          <Route path="otp" element={<PaymentOtpPage />} />
+          <Route path="success" element={<PaymentSuccessPage />} />
+          <Route path="offline" element={<PaymentOfflinePage />} />
+          <Route path="offline/pending" element={<PaymentOfflinePendingPage />} />
+          <Route path="history" element={<PaymentHistoryPage />} />
         </Routes>
-      </BrowserRouter>
+      </React.Fragment>
     </PaymentProvider>
+  </div>
+);
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Mount payment routes under /payments/*/}
+        <Route path="/payments/*" element={<PaymentLayout />} />
+
+        {/* Service user / waste-submission routes at root */}
+        <Route path="/*" element={<ServiceUserLayout />} />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
-
-export default App;
