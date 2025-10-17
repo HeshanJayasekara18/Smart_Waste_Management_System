@@ -118,6 +118,23 @@ async function downloadOfflineSlip(req, res) {
   }
 }
 
+async function getHistory(req, res) {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'User not resolved' });
+    }
+    const rawLimit = Number(req.query.limit);
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 && rawLimit <= 100 ? rawLimit : 20;
+    const payments = await PaymentService.getPaymentHistory({
+      userId: req.user.id,
+      limit,
+    });
+    return res.json({ payments });
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+}
+
 module.exports = {
   initiatePayment,
   confirmPayment,
@@ -125,4 +142,5 @@ module.exports = {
   getDevOtp,
   downloadReceipt,
   downloadOfflineSlip,
+  getHistory,
 };

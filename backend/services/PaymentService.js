@@ -350,6 +350,48 @@ async function getOfflineSlipFile({ paymentId, userId }) {
   return { filePath, fileName };
 }
 
+async function getPaymentHistory({ userId, limit = 20 }) {
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new Error('Invalid user id');
+  }
+
+  const payments = await Payment.find({ userId })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .lean();
+
+  if (!payments.length) {
+    return [];
+  }
+
+  const billIds = [...new Set(payments.map((payment) => payment.billId.toString()))];
+  const bills = await Bill.find({ _id: { $in: billIds } })
+    .select('_id period status billingModelUsed')
+    .lean();
+  const billMap = new Map(bills.map((bill) => [bill._id.toString(), bill]));
+
+  return payments.map((payment) => {
+    const bill = billMap.get(payment.billId.toString());
+    return {
+      id: payment._id,
+      billId: payment.billId,
+      billPeriod: bill?.period || '',
+      billStatus: bill?.status || '',
+      billingModelUsed: bill?.billingModelUsed || '',
+      amount: payment.amount,
+      currency: payment.currency,
+      method: payment.method,
+      status: payment.status,
+      reference: payment.method === 'offline' ? payment.offlineReference : payment.gatewayRef,
+      createdAt: payment.createdAt,
+      paidAt: payment.paidAt,
+      hasReceipt: Boolean(payment.receiptPath),
+      hasOfflineSlip: Boolean(payment.offlineReceiptPath),
+      confirmedByAdmin: payment.confirmedByAdmin,
+    };
+  });
+}
+
 module.exports = {
   initiatePayment,
   confirmPayment,
@@ -357,4 +399,5 @@ module.exports = {
   getPaymentOtpDev,
   getReceiptFile,
   getOfflineSlipFile,
+  getPaymentHistory,
 };

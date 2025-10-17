@@ -5,6 +5,7 @@ const router = express.Router();
 
 router.post('/initiate', PaymentController.initiatePayment);
 router.post('/confirm', PaymentController.confirmPayment);
+router.get('/history', PaymentController.getHistory);
 router.get('/:paymentId/receipt', PaymentController.downloadReceipt);
 router.get('/:paymentId/offline-slip', PaymentController.downloadOfflineSlip);
 

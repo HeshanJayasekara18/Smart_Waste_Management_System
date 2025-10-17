@@ -1,15 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { usePaymentContext } from './PaymentContext';
 import { fetchBillingSnapshot, getPaymentClientConfig } from './PaymentApi';
-
-const navItems = [
-  { label: 'Dashboard', badge: null, active: true },
-  { label: 'My Bills', badge: '3', active: false },
-  { label: 'Payment Methods', badge: null, active: false },
-  { label: 'Receipt & History', badge: null, active: false },
-  { label: 'Setting', badge: null, active: false },
-];
+import { getNavItems } from './PaymentNavConfig';
 
 const formatter = new Intl.NumberFormat('en-US', {
   minimumFractionDigits: 0,
@@ -58,6 +51,7 @@ function deriveDueInfo(period) {
 
 function PaymentDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { billingSnapshot, setBillingSnapshot, setActivePayment, setRecentPayment } =
     usePaymentContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -191,6 +185,19 @@ function PaymentDashboard() {
     navigate('/payments/select');
   }
 
+  const navItems = useMemo(
+    () => getNavItems(location.pathname),
+    [location.pathname]
+  );
+
+  function handleNavClick(item) {
+    if (item.disabled || !item.path || item.path === '#') {
+      return;
+    }
+    navigate(item.path);
+    setSidebarOpen(false);
+  }
+
   return (
     <div className="min-h-screen bg-[#F4F6FB] text-slate-900">
       <div className="flex min-h-screen">
@@ -216,7 +223,9 @@ function PaymentDashboard() {
                 type="button"
                 className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm font-medium transition hover:bg-emerald-50 hover:text-emerald-600 ${
                   item.active ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-600'
-                }`}
+                } ${item.disabled ? 'cursor-not-allowed opacity-70 hover:bg-transparent hover:text-slate-600' : ''}`}
+                onClick={() => handleNavClick(item)}
+                disabled={item.disabled}
               >
                 <span className="flex items-center gap-3">
                   <span
@@ -284,8 +293,8 @@ function PaymentDashboard() {
           />
         ) : null}
 
-        {/* Getting a weird left margin for this class please check */}
-        <div className="flex flex-1 flex-col lg:ml-54">
+  {/* Main content area */}
+  <div className="flex flex-1 flex-col lg:ml-54">
           <header className="flex flex-col gap-6 px-6 pt-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
               <button
@@ -571,7 +580,7 @@ function PaymentDashboard() {
             ) : null}
           </main>
           {loading ? (
-            <div className="pointer-events-none fixed inset-0 z-30 flex items-center justify-center bg-slate-900/10 backdrop-blur-sm lg:ml-72">
+            <div className="pointer-events-none fixed inset-0 z-30 flex items-center justify-center bg-slate-900/10 backdrop-blur-sm lg:ml-54">
               <div className="rounded-xl bg-white px-6 py-4 text-sm font-medium text-slate-600 shadow-lg">
                 Loading billing data...
               </div>

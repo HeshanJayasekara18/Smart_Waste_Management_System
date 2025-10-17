@@ -59,6 +59,22 @@ export async function fetchDevOtp({ apiBase, devUserId, paymentId }) {
   return handleResponse(response);
 }
 
+export async function fetchPaymentHistory({ apiBase, devUserId, limit = 20 }) {
+  const params = new URLSearchParams();
+  if (limit) {
+    params.set('limit', String(limit));
+  }
+  const response = await fetch(
+    `${apiBase}/api/payments/history${params.toString() ? `?${params.toString()}` : ''}`,
+    {
+      headers: {
+        'x-user-id': devUserId,
+      },
+    }
+  );
+  return handleResponse(response);
+}
+
 export async function initiateOfflinePayment({
   apiBase,
   devUserId,
